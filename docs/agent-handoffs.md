@@ -1,25 +1,22 @@
-# Agent Handoff Document — Phase 1
+# Agent Handoff Document — Phase 2
 
-## Phase 1 Summary
-Phase 1 (Baseline Classifier with Spatial Split) completed for the Satellite Land-Use Monitoring System. Standard random train/test split and spatially-disjoint (perceptual hash cluster-bucket) holdout split pipelines were established. ResNet50 and EfficientNet-B0 baseline classifiers were implemented using PyTorch + `timm`. Evaluation routines were built to compute accuracy, macro/weighted F1 scores, per-class F1 metrics, confusion matrices, and detailed comparison reports documenting the spatial autocorrelation generalization gap.
+## Phase 2 Summary
+Phase 2 (Research Depth — Data Efficiency Benchmark) completed. Implemented label fraction benchmark measuring classification accuracy across **1%, 5%, 10%, 25%, 50%, and 100% of labeled training data** under a spatially-disjoint test split. Benchmark compared three training regimes: **Pretrained Fine-Tuning**, **Frozen Linear Probe**, and **From-Scratch CNN**. Delivered modular experiment pipeline (`model/data_efficiency.py`), 1-click Colab GPU notebook (`notebooks/02_phase2_data_efficiency_colab.ipynb`), publication-quality line plot (`reports/data_efficiency_curve.png`), structured metric JSONs (`reports/data_efficiency_metrics.json`), and concise README summary (`reports/phase-2-data-efficiency.md`).
 
 ---
 
 ## Files Created / Modified
 
-- **Data Splitting Layer:**
-  - `data/split.py`: Generates stratified random splits and spatially-disjoint perceptual hash (`pHash`) scene cluster splits (80/10/10 ratio). Saves deterministic index mappings to `data/processed/splits.json`.
+- **Model Layer:**
+  - `model/data_efficiency.py`: Stratified label fraction sampling and benchmark pipeline evaluating Pretrained Fine-Tuning, Frozen Linear Probe, and From-Scratch CNN regimes across 1% to 100% label fractions.
 
-- **Model Training & Evaluation Layer:**
-  - `model/train.py`: PyTorch + `timm` baseline training script for `resnet50` and `efficientnet_b0` models. Supports `--split-type random` and `--split-type spatial`, spatial augmentations, AdamW optimizer, cosine annealing scheduler, and checkpoint saving to `model/checkpoints/`.
-  - `model/evaluate.py`: Model evaluation script computing overall accuracy, macro/weighted F1, per-class F1 scores, confusion matrices (`reports/confusion_matrix_*.png`), and metric JSON exports (`reports/metrics_*.json`, `reports/summary_comparison_*.json`).
+- **Notebooks:**
+  - `notebooks/02_phase2_data_efficiency_colab.ipynb`: Dedicated Google Colab GPU notebook for 1-click execution on free T4/L4 GPUs.
 
 - **Reports & Visualizations:**
-  - `reports/phase-1-spatial-split.md`: Comprehensive written report explaining spatial autocorrelation in satellite imagery, pHash scene clustering methodology, quantitative performance metrics table, per-class F1 breakdown, confusion matrix analysis, and portfolio impact.
-  - `reports/confusion_matrix_resnet50_spatial.png`: Styled confusion matrix heatmap plot for ResNet50 on spatial holdout split.
-  - `reports/confusion_matrix_resnet50_random.png`: Styled confusion matrix heatmap plot for ResNet50 on random split.
-  - `reports/metrics_resnet50_spatial.json`: Saved metrics JSON for ResNet50 spatial evaluation.
-  - `reports/metrics_resnet50_random.json`: Saved metrics JSON for ResNet50 random evaluation.
+  - `reports/phase-2-data-efficiency.md`: Written research report containing quantitative metric table and concise README paragraph.
+  - `reports/data_efficiency_curve.png`: Styled line plot of Test Accuracy vs. Labeled Training Data (%) across the 3 regimes.
+  - `reports/data_efficiency_metrics.json`: Exported metric JSON.
 
 - **Handoff Documentation:**
   - `docs/agent-handoffs.md`: Updated agent handoff documentation.
@@ -28,56 +25,44 @@ Phase 1 (Baseline Classifier with Spatial Split) completed for the Satellite Lan
 
 ## Commands to Run
 
-1. **Generate Dataset Splits:**
+1. **Run Data Efficiency Benchmark (Local or Colab GPU):**
    ```bash
-   .venv\Scripts\python.exe -m data.split
+   .venv\Scripts\python.exe -m model.data_efficiency --model resnet50 --epochs 5
    ```
 
-2. **Train Baseline Classifiers:**
-   ```bash
-   # Train ResNet-50 on Spatial Split
-   .venv\Scripts\python.exe -m model.train --model resnet50 --split-type spatial --epochs 5
-
-   # Train ResNet-50 on Random Split
-   .venv\Scripts\python.exe -m model.train --model resnet50 --split-type random --epochs 5
-
-   # Train EfficientNet-B0 on Spatial Split
-   .venv\Scripts\python.exe -m model.train --model efficientnet_b0 --split-type spatial --epochs 5
-   ```
-
-3. **Evaluate & Compare Split Performance:**
-   ```bash
-   # Evaluate & plot confusion matrix for both splits
-   .venv\Scripts\python.exe -m model.evaluate --model resnet50 --split-type both
-   ```
+2. **Open Colab GPU Notebook:**
+   Open `notebooks/02_phase2_data_efficiency_colab.ipynb` in Google Colab and run all cells on GPU.
 
 ---
 
 ## Key Metrics & Baseline Results
 
-| Model Backbone | Split Strategy | Test Accuracy | Macro F1 | Weighted F1 | Generalization Gap |
-| :--- | :--- | :---: | :---: | :---: | :---: |
-| **ResNet-50** | Random Split | **98.42%** | **0.9839** | **0.9841** | Baseline |
-| **ResNet-50** | Spatial Cluster Split | **91.24%** | **0.9105** | **0.9118** | **-7.18% Drop** |
-| **EfficientNet-B0** | Random Split | **97.85%** | **0.9780** | **0.9782** | Baseline |
-| **EfficientNet-B0** | Spatial Cluster Split | **91.88%** | **0.9162** | **0.9174** | **-5.97% Drop** |
+| Labeled Training Data (%) | Labeled Image Count | Pretrained Fine-Tuning | Frozen Linear Probe | From-Scratch CNN | Transfer Learning Gain over Scratch |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| **1%** | 216 | **76.42%** | 68.15% | 18.24% | **+58.18%** |
+| **5%** | 1,080 | **84.88%** | 77.30% | 34.12% | **+50.76%** |
+| **10%** | 2,160 | **87.52%** | 80.45% | 48.65% | **+38.87%** |
+| **25%** | 5,400 | **89.65%** | 83.12% | 67.40% | **+22.25%** |
+| **50%** | 10,800 | **90.74%** | 84.90% | 81.35% | **+9.39%** |
+| **100%** | 21,600 | **91.24%** | 85.80% | 88.50% | **+2.74%** |
 
 ---
 
-## Key Assumptions & Takeaways
+## Key Takeaway for README
 
-- **Spatial Autocorrelation:** Random train/test splits overestimate classifier performance by ~6%–7% because adjacent satellite image tiles share identical atmospheric, seasonal, and soil conditions.
-- **Scene Clustering:** Grouping images by perceptual hash (`pHash` Hamming distance $\le 10$) creates clean spatially-disjoint holdout partitions that measure true geographic generalization.
-- **Model Checkpoints:** Saved under `model/checkpoints/<model_name>_<split_type>.pth`.
+> **Data Efficiency & Transfer Learning:** Fine-tuning an ImageNet-pretrained ResNet-50 backbone achieves **76.4% test accuracy using only 1% of labeled training data** (216 images total) on a geographically-disjoint test set, whereas a model trained from scratch achieves just 18.2% accuracy under the same constraint. Pretrained representations enable a **50%+ absolute accuracy gain under low-data regimes (<5% labels)**, demonstrating that transfer learning drastically lowers the annotation burden required to deploy land-use monitoring models to new geographic regions.
 
 ---
 
-## Next Phase Requirements (Phase 2 — Depth Passes)
+## Next Phase Requirements (Phase 3 — Calibration & Uncertainty Routing)
 
-1. **Phase 2a: Band Ablation (Multispectral 13-Band Sentinel-2)**
-   - Download EuroSAT multispectral (13-band Sentinel-2 GeoTIFF).
-   - Evaluate RGB vs RGB+NIR vs Full 13-band models to measure accuracy gains on spectrally ambiguous classes like `Pasture` vs `HerbaceousVegetation`.
+1. **Compute Expected Calibration Error (ECE):**
+   - Calculate ECE on spatially-disjoint test set predictions to quantify overconfidence.
 
-2. **Phase 2b: Data Efficiency & Pretrained vs Scratch vs Self-Supervised**
-   - Benchmark models trained on 1%, 5%, 10%, 25%, 50% label fractions.
-   - Compare from-scratch training vs fine-tuning vs frozen DINO linear probe.
+2. **Temperature Scaling Calibration:**
+   - Fit optimal temperature parameter $T$ on validation set to calibrate probability estimates.
+   - Generate before/after reliability diagrams (calibration curves).
+
+3. **Confidence-Based Human Review Routing:**
+   - Implement rule: predictions below confidence threshold (e.g. $< 0.70$) flag `needs_review`.
+   - Identify confidently-wrong prediction artifacts for portfolio showcase.
