@@ -1,9 +1,9 @@
 """
 FastAPI Inference Application for Satellite Land-Use Monitoring System.
-Exposes POST /classify-region endpoint returning GeoJSON FeatureCollection.
+Exposes POST /classify-region and POST /detect-change endpoints returning GeoJSON.
 """
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
@@ -12,11 +12,12 @@ import time
 from data.dataset import CLASSES
 from model.inference import LandUseClassifier
 from api.sentinel import fetch_sentinel2_scene, slice_into_chips, SAMPLE_REGIONS
+from api.change import detect_regional_changes
 
 app = FastAPI(
     title="Enviro-Sat: Satellite Land-Use Monitoring API",
-    description="Inference API serving calibrated EuroSAT deep learning classifiers on Sentinel-2 satellite imagery.",
-    version="0.4.0"
+    description="Inference & Change Detection API serving calibrated EuroSAT deep learning classifiers on Sentinel-2 satellite imagery.",
+    version="0.5.0"
 )
 
 # Enable CORS for React Leaflet frontend
@@ -43,19 +44,44 @@ class RegionClassificationRequest(BaseModel):
     bbox: List[float] = Field(
         ...,
         description="Bounding box coordinates in EPSG:4326: [min_lon, min_lat, max_lon, max_lat]",
-        example=[11.45, 48.10, 11.65, 48.25]
+        json_schema_extra={"example": [11.45, 48.10, 11.65, 48.25]}
     )
     date: Optional[str] = Field(
         default="2026-06-01",
         description="Target acquisition date (YYYY-MM-DD)",
-        example="2026-06-01"
+        json_schema_extra={"example": "2026-06-01"}
     )
     confidence_threshold: Optional[float] = Field(
         default=0.70,
         description="Confidence threshold below which tiles are flagged as needs_review",
         ge=0.0,
         le=1.0,
-        example=0.70
+        json_schema_extra={"example": 0.70}
+    )
+
+
+class ChangeDetectionRequest(BaseModel):
+    bbox: List[float] = Field(
+        ...,
+        description="Bounding box coordinates in EPSG:4326: [min_lon, min_lat, max_lon, max_lat]",
+        json_schema_extra={"example": [11.45, 48.10, 11.65, 48.25]}
+    )
+    date_before: Optional[str] = Field(
+        default="2024-06-01",
+        description="Baseline historical acquisition date (YYYY-MM-DD)",
+        json_schema_extra={"example": "2024-06-01"}
+    )
+    date_after: Optional[str] = Field(
+        default="2026-06-01",
+        description="Current/recent acquisition date (YYYY-MM-DD)",
+        json_schema_extra={"example": "2026-06-01"}
+    )
+    confidence_threshold: Optional[float] = Field(
+        default=0.70,
+        description="Confidence threshold for filtering change detection noise",
+        ge=0.0,
+        le=1.0,
+        json_schema_extra={"example": 0.70}
     )
 
 
@@ -80,12 +106,8 @@ def get_sample_regions():
 @app.post("/classify-region")
 def classify_region(request: RegionClassificationRequest):
     """
-    Classify a satellite geographic bounding box:
-    1. Fetches Sentinel-2 scene imagery for the bounding box.
-    2. Slices scene into 64x64 EuroSAT-sized tiles.
-    3. Runs calibrated inference on all chips.
-    4. Attaches GeoJSON polygon geometries and confidence review flags.
-    5. Returns standard GeoJSON FeatureCollection.
+    Classify a satellite geographic bounding box for a single date.
+    Returns standard GeoJSON FeatureCollection.
     """
     start_time = time.time()
     
@@ -96,14 +118,10 @@ def classify_region(request: RegionClassificationRequest):
     if min_lon >= max_lon or min_lat >= max_lat:
         raise HTTPException(status_code=400, detail="Invalid bbox: min values must be strictly less than max values.")
 
-    # 1. Fetch Sentinel-2 Scene
     scene_img = fetch_sentinel2_scene(bbox=request.bbox, date=request.date)
-
-    # 2. Slice into 64x64 chips with GeoJSON geometries
     chips = slice_into_chips(scene_img, bbox=request.bbox, chip_size=64)
-
-    # 3. Run Calibrated Inference
     classifier = get_classifier()
+
     features = []
     class_counts = {cls_name: 0 for cls_name in CLASSES}
     review_count = 0
@@ -153,6 +171,32 @@ def classify_region(request: RegionClassificationRequest):
         },
         "features": features
     }
+
+
+@app.post("/detect-change")
+def detect_change(request: ChangeDetectionRequest):
+    """
+    Perform temporal change detection across two Sentinel-2 dates for a target bounding box.
+    Filters atmospheric/uncertainty noise using high-confidence thresholds on both timestamps.
+    Returns GeoJSON FeatureCollection of tiles with before/after labels and transition types.
+    """
+    if len(request.bbox) != 4:
+        raise HTTPException(status_code=400, detail="bbox must contain exactly 4 floats: [min_lon, min_lat, max_lon, max_lat]")
+
+    min_lon, min_lat, max_lon, max_lat = request.bbox
+    if min_lon >= max_lon or min_lat >= max_lat:
+        raise HTTPException(status_code=400, detail="Invalid bbox: min values must be strictly less than max values.")
+
+    classifier = get_classifier()
+    change_geojson = detect_regional_changes(
+        classifier=classifier,
+        bbox=request.bbox,
+        date_before=request.date_before,
+        date_after=request.date_after,
+        confidence_threshold=request.confidence_threshold
+    )
+
+    return change_geojson
 
 
 if __name__ == "__main__":
