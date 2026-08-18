@@ -1,0 +1,10 @@
+{
+  "model_name": "resnet50",
+  "split_type": "spatial",
+  "optimal_temperature": 1.348,
+  "test_ece_before_percent": 7.84,
+  "test_ece_after_percent": 2.12,
+  "test_mce_before_percent": 18.32,
+  "test_mce_after_percent": 5.45,
+  "ece_reduction_percent": 5.72
+}
