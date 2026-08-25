@@ -7,9 +7,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install PyTorch CPU and production dependencies (lightweight, ~180MB total)
+# Install PyTorch CPU and production dependencies with --extra-index-url
 COPY requirements-prod.txt .
-RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu && \
+RUN pip install --no-cache-dir torch torchvision --extra-index-url https://download.pytorch.org/whl/cpu && \
     pip install --no-cache-dir -r requirements-prod.txt
 
 # Copy backend, data, and model code
