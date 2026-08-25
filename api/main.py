@@ -140,13 +140,14 @@ def classify_region(request: RegionClassificationRequest):
     chips = slice_into_chips(scene_img, bbox=request.bbox, chip_size=64)
     classifier = get_classifier()
 
+    chip_images = [chip["chip_image"] for chip in chips]
+    predictions = classifier.predict_batch(chip_images, threshold=request.confidence_threshold)
+
     features = []
     class_counts = {cls_name: 0 for cls_name in CLASSES}
     review_count = 0
 
-    for chip in chips:
-        pred_result = classifier.predict(chip["chip_image"], threshold=request.confidence_threshold)
-        
+    for chip, pred_result in zip(chips, predictions):
         pred_class = pred_result["predicted_class"]
         confidence = pred_result["confidence"]
         needs_review = pred_result["needs_review"]

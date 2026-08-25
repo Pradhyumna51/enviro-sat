@@ -114,6 +114,49 @@ class LandUseClassifier:
             "needs_review": needs_review
         }
 
+    def predict_batch(
+        self,
+        images: List[Union[str, Path, Image.Image, torch.Tensor]],
+        threshold: float = 0.70
+    ) -> List[Dict[str, Any]]:
+        """
+        Run vectorized batch inference on multiple satellite tiles in a single forward pass.
+        Massively accelerates regional inference (1 single GPU/CPU matrix operation vs 64 sequential passes).
+        """
+        if not images:
+            return []
+
+        tensors = []
+        for img in images:
+            if isinstance(img, (str, Path)):
+                pil_img = Image.open(img).convert("RGB")
+                tensors.append(self.transform(pil_img))
+            elif isinstance(img, Image.Image):
+                tensors.append(self.transform(img.convert("RGB")))
+            elif isinstance(img, torch.Tensor):
+                tensors.append(img if img.dim() == 3 else img.squeeze(0))
+
+        batch_tensor = torch.stack(tensors).to(self.device)
+
+        with torch.no_grad():
+            scaled_logits = self.calibrated_model(batch_tensor)
+            probs = torch.softmax(scaled_logits, dim=1)
+            confidences, pred_indices = torch.max(probs, dim=1)
+
+        results = []
+        for i in range(len(images)):
+            conf_val = round(float(confidences[i].item()), 4)
+            pred_class = CLASSES[pred_indices[i].item()]
+            class_probs = {CLASSES[c]: round(float(probs[i, c].item()), 4) for c in range(len(CLASSES))}
+            results.append({
+                "predicted_class": pred_class,
+                "confidence": conf_val,
+                "class_probabilities": class_probs,
+                "needs_review": conf_val < threshold
+            })
+
+        return results
+
 
 def extract_and_visualize_failure_modes(
     classifier: LandUseClassifier,

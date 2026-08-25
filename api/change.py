@@ -120,12 +120,18 @@ def detect_regional_changes(
     transition_summary: Dict[str, int] = {}
     skipped_due_to_uncertainty = 0
 
+    images_before = [cb["chip_image"] for cb in chips_before]
+    images_after = [ca["chip_image"] for ca in chips_after]
+
+    preds_before = classifier.predict_batch(images_before, threshold=confidence_threshold)
+    preds_after = classifier.predict_batch(images_after, threshold=confidence_threshold)
+
     for i in range(total_tiles):
         cb = chips_before[i]
         ca = chips_after[i]
 
-        pred_before = classifier.predict(cb["chip_image"], threshold=confidence_threshold)
-        pred_after = classifier.predict(ca["chip_image"], threshold=confidence_threshold)
+        pred_before = preds_before[i]
+        pred_after = preds_after[i]
 
         class_b = pred_before["predicted_class"]
         conf_b = pred_before["confidence"]
