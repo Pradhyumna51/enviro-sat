@@ -199,6 +199,14 @@ def detect_change(request: ChangeDetectionRequest):
     return change_geojson
 
 
+# Optionally mount built frontend SPA for single-container deployments (e.g. Hugging Face Spaces / Render)
+from pathlib import Path
+_frontend_dist = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+if _frontend_dist.exists():
+    from fastapi.staticfiles import StaticFiles
+    app.mount("/", StaticFiles(directory=str(_frontend_dist), html=True), name="frontend")
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
