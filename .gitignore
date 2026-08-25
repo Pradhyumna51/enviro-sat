@@ -51,7 +51,6 @@ model/*.pt
 model/*.pth
 model/*.onnx
 reports/*.pdf
-reports/*.png
 
 # IDE / OS / Agent specific
 .vscode/
