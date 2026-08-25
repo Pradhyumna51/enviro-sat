@@ -3,7 +3,8 @@
  * Calls the FastAPI backend endpoints; base URL configurable via VITE_API_URL.
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const DEFAULT_API_URL = 'https://enviro-sat-api.onrender.com';
+const BASE_URL = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:8000' : DEFAULT_API_URL);
 
 /**
  * POST /classify-region
