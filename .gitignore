@@ -58,6 +58,9 @@ reports/*.pdf
 .DS_Store
 Thumbs.db
 .gemini/
+.code-review-graph/
+.pytest_cache/
+.vercel/
 implementation_plan.md
 walkthrough.md
 EuroSAT_Satellite_Monitoring_Implementation_Plan.md
