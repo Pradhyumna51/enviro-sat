@@ -11,12 +11,6 @@
 
 > An end-to-end Earth Observation (EO) intelligence pipeline that turns Sentinel-2 satellite imagery into calibrated regional land-cover classifications and multi-temporal change analytics with automated uncertainty routing.
 
-### 🌐 **Live Deployments**
-* **Interactive Map Dashboard**: [https://euro-landsat.vercel.app](https://euro-landsat.vercel.app)
-* **Hugging Face Space**: [huggingface.co/spaces/Pradhyumna51/enviro-sat](https://huggingface.co/spaces/Pradhyumna51/enviro-sat)
-* **FastAPI Backend (Render)**: [https://enviro-sat-api.onrender.com](https://enviro-sat-api.onrender.com)
-* **Interactive API Documentation**: [https://enviro-sat-api.onrender.com/docs](https://enviro-sat-api.onrender.com/docs)
-
 ---
 
 ## 📌 Problem Statement
