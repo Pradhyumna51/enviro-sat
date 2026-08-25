@@ -9,7 +9,6 @@ import os
 from pathlib import Path
 from typing import Dict, Any, List, Tuple, Union
 from PIL import Image
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
@@ -170,6 +169,7 @@ def extract_and_visualize_failure_modes(
 
     # Render collage of top failure modes
     if confidently_wrong:
+        import matplotlib.pyplot as plt
         n_plots = min(max_examples, len(confidently_wrong))
         cols = min(3, n_plots)
         rows = (n_plots + cols - 1) // cols
