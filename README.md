@@ -39,32 +39,32 @@ Most satellite computer vision workflows stop at training an image classifier on
 
 ```mermaid
 flowchart TD
-    subgraph UI["Frontend (React 19 + shadcn/ui + Leaflet)"]
-        A[Interactive Leaflet Map] -->|Select BBox / Dates| B[Console Controls & Sliders]
-        B -->|POST /classify-region<br/>POST /detect-change| C[API Client]
-        D[GeoJSON Overlays & Popups] <-- C
-        E[KPI & Transition Analytics] <-- C
+    subgraph UI ["Frontend (React 19 + Leaflet + shadcn/ui)"]
+        A["Interactive Leaflet Map"] -->|"Select BBox / Dates"| B["Console Controls & Sliders"]
+        B -->|"POST /classify-region / detect-change"| C["API Client"]
+        C --> D["GeoJSON Overlays & Popups"]
+        C --> E["KPI & Transition Analytics"]
     end
 
-    subgraph Backend["FastAPI Production Engine"]
-        C --> F[REST API Routers]
-        F --> G[Geospatial Tiling Engine]
-        G -->|Fetch / Construct Scene| H[512x512 Sentinel-2 Scene]
-        H -->|Slice into 64x64 Chips| I[Aligned Image Chips + WGS84 GeoJSON]
-        I --> J[Batch ML Inference Pipeline]
+    subgraph Backend ["FastAPI Production Engine"]
+        C --> F["REST API Routers"]
+        F --> G["Geospatial Tiling Engine"]
+        G --> H["512x512 Sentinel-2 Scene"]
+        H -->|"Slice into 64x64 Chips"| I["Aligned Image Chips + WGS84 GeoJSON"]
+        I --> J["Batch ML Inference Pipeline"]
     end
 
-    subgraph ML["Calibrated Machine Learning Core"]
-        J --> K[Deep Feature Backbone<br/>ResNet-50 / EfficientNet-B0]
-        K -->|Raw Logits| L[Temperature Scaling Calibrator<br/>Optimal T = 1.348]
-        L -->|Calibrated Probabilities| M[Confidence-Threshold Gating<br/>threshold = 0.70]
-        M -->|confidence < threshold| N[Flag needs_review = True]
-        M -->|confidence >= threshold| O[Auto-Approve Classification]
-        O --> P[3-Stage Change Noise Filter]
+    subgraph ML ["Calibrated ML Core"]
+        J --> K["Deep Feature Backbone (ResNet-50)"]
+        K -->|"Raw Logits"| L["Temperature Scaling (T = 1.348)"]
+        L -->|"Calibrated Probabilities"| M{"Confidence Gating (>= 0.70)"}
+        M -->|"Low (< 0.70)"| N["Flag needs_review = True"]
+        M -->|"High (>= 0.70)"| O["Auto-Approve Classification"]
+        O --> P["3-Stage Change Noise Filter"]
     end
 
-    P -->|GeoJSON FeatureCollection| D
-    N -->|Hatched / Dashed Overlays| D
+    P --> D
+    N --> D
 ```
 
 ---
@@ -96,29 +96,31 @@ Spatial Leakage Demonstration:
 ### 2. Model Calibration & Uncertainty Routing (Phase 3)
 Uncalibrated models output overconfident predictions on unseen terrain. Using post-processing **Temperature Scaling** optimized via L-BFGS on validation logits:
 
-$$\hat{p}_i = \frac{\exp(z_i / T)}{\sum_j \exp(z_j / T)}$$
+$$P_i = \frac{e^{z_i / T}}{\sum_j e^{z_j / T}}$$
 
 * **Optimal Learned Temperature**: $T = 1.348$
-* **Expected Calibration Error (ECE)**: Reduced from **7.84% $\rightarrow$ 2.12%** (**73% reduction**).
-* **Maximum Calibration Error (MCE)**: Reduced from **18.32% $\rightarrow$ 5.45%**.
+* **Expected Calibration Error (ECE)**: Reduced from **7.84% &rarr; 2.12%** (**73% reduction**).
+* **Maximum Calibration Error (MCE)**: Reduced from **18.32% &rarr; 5.45%**.
 * **Automated Uncertainty Routing (`needs_review`)**: Any tile with calibrated confidence $< 70\%$ is flagged for human GIS verification and rendered with dashed yellow outlines in the web UI.
 
-![Calibration Reliability Diagram](reports/calibration_curve.png)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Pradhyumna51/enviro-sat/main/reports/calibration_curve.png" alt="Calibration Reliability Diagram" width="700"/>
+</p>
 
 ---
 
 ### 3. Noise-Filtered Multi-Temporal Change Detection (Phase 5)
 Comparing temporal scenes ($T_1$ baseline vs $T_2$ current) using a **3-stage verification filter**:
-1. **Label Inequality**: $\text{Class}(T_1) \neq \text{Class}(T_2)$
-2. **Dual-Confidence Gating**: $\text{Conf}(T_1) \ge \tau \land \text{Conf}(T_2) \ge \tau$
-3. **Uncertainty Rejection**: $\neg\text{needs\_review}(T_1) \land \neg\text{needs\_review}(T_2)$
+1. **Label Inequality**: `Class(T1) != Class(T2)`
+2. **Dual-Confidence Gating**: `Confidence(T1) >= threshold` AND `Confidence(T2) >= threshold`
+3. **Uncertainty Rejection**: `needs_review == False` on both timestamps
 
 #### Semantic Transition Matrix
 Detected changes are automatically categorized into real-world environmental dynamics:
-* **Urbanization**: Natural/Agri $\rightarrow$ Residential/Industrial
-* **Deforestation**: Forest $\rightarrow$ Crop/Pasture/Urban
-* **Reforestation**: Non-forest $\rightarrow$ Forest
-* **Infrastructure Expansion**: Natural/Agri $\rightarrow$ Highway
+* **Urbanization**: Natural/Agri &rarr; Residential/Industrial
+* **Deforestation**: Forest &rarr; Crop/Pasture/Urban
+* **Reforestation**: Non-forest &rarr; Forest
+* **Infrastructure Expansion**: Natural/Agri &rarr; Highway
 * **Agricultural Conversion & Hydrological Shifts**
 
 ---
