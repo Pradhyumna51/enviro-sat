@@ -29,6 +29,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.get("/")
+@app.head("/")
+def root():
+    return {
+        "service": "Enviro-Sat: Satellite Land-Use Monitoring API",
+        "status": "online",
+        "version": "0.6.0",
+        "endpoints": {
+            "health": "/health",
+            "docs": "/docs",
+            "classify_region": "/classify-region",
+            "detect_change": "/detect-change",
+            "sample_regions": "/sample-regions"
+        }
+    }
+
+
 # Global Model Instance (lazy initialized)
 _classifier: Optional[LandUseClassifier] = None
 
