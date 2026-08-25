@@ -1,48 +1,45 @@
-import { useState, useCallback, useEffect } from 'react';
-import 'leaflet/dist/leaflet.css';
-import './App.css';
-
-import MapView from './components/MapView';
-import Sidebar from './components/Sidebar';
-import { useClassify } from './hooks/useClassify';
-import { injectHatchPattern } from './utils/patterns';
+import React, { useState, useCallback, useEffect } from 'react'
+import MapView from '@/components/MapView'
+import Sidebar from '@/components/Sidebar'
+import { useClassify } from '@/hooks/useClassify'
+import { injectHatchPattern } from '@/utils/patterns'
 
 /**
- * Root application — wires sidebar controls ↔ map ↔ API.
+ * Root Application Container — connects Sidebar AI controls, Leaflet GeoJSON view, and inference pipelines.
  */
 export default function App() {
-  const [mode, setMode] = useState('classify');
-  const [bbox, setBbox] = useState(null);
-  const [flyBounds, setFlyBounds] = useState(null);
-  const { data, loading, error, runClassify, runChange, clear } = useClassify();
+  const [mode, setMode] = useState('classify')
+  const [bbox, setBbox] = useState(null)
+  const [flyBounds, setFlyBounds] = useState(null)
+  const { data, loading, error, runClassify, runChange, clear } = useClassify()
 
   useEffect(() => {
-    injectHatchPattern();
-  }, []);
+    injectHatchPattern()
+  }, [])
 
-  // Clear results when mode changes
+  // Clear previous analysis layer on mode switch
   useEffect(() => {
-    clear();
-  }, [mode, clear]);
+    clear()
+  }, [mode, clear])
 
   const handleBboxDrawn = useCallback((newBbox) => {
-    setBbox(newBbox);
-  }, []);
+    setBbox(newBbox)
+  }, [])
 
   const handleFlyTo = useCallback((bounds) => {
-    setFlyBounds(bounds);
-  }, []);
+    setFlyBounds(bounds)
+  }, [])
 
   const handleAnalyze = useCallback((params) => {
     if (mode === 'classify') {
-      runClassify(params);
+      runClassify(params)
     } else {
-      runChange(params);
+      runChange(params)
     }
-  }, [mode, runClassify, runChange]);
+  }, [mode, runClassify, runChange])
 
   return (
-    <div className="app">
+    <div className="flex h-screen w-screen bg-slate-950 overflow-hidden select-none">
       <Sidebar
         mode={mode}
         setMode={setMode}
@@ -54,12 +51,14 @@ export default function App() {
         data={data}
         onFlyTo={handleFlyTo}
       />
-      <MapView
-        geojsonData={data}
-        mode={mode}
-        flyBounds={flyBounds}
-        onBboxDrawn={handleBboxDrawn}
-      />
+      <main className="flex-1 relative h-full">
+        <MapView
+          geojsonData={data}
+          mode={mode}
+          flyBounds={flyBounds}
+          onBboxDrawn={handleBboxDrawn}
+        />
+      </main>
     </div>
-  );
+  )
 }
