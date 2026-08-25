@@ -121,7 +121,7 @@ Built with **React 19**, **Tailwind CSS v4**, **shadcn/ui primitives**, and **Le
 
 ```
 +----------------------------------------------------------------------------------------------------+
-| 🛰️ Enviro-Sat Console v0.6                     |  [Leaflet Dark CartoDB Map View]                 |
+| 🛰️ Enviro-Sat Console v1.0.0                   |  [Leaflet Dark CartoDB Map View]                 |
 | [ Land Cover ]  [ Change AI ]                  |                                                   |
 |                                                |    +-----------------------------+                |
 | Region: [ Munich Urban Fringe ▼ ]              |    | [Chip (1,1)] | [Chip (1,2)] |                |

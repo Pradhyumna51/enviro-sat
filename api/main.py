@@ -17,7 +17,7 @@ from api.change import detect_regional_changes
 app = FastAPI(
     title="Enviro-Sat: Satellite Land-Use Monitoring API",
     description="Inference & Change Detection API serving calibrated EuroSAT deep learning classifiers on Sentinel-2 satellite imagery.",
-    version="0.5.0"
+    version="1.0.0"
 )
 
 # Enable CORS for React Leaflet frontend
@@ -36,7 +36,7 @@ def root():
     return {
         "service": "Enviro-Sat: Satellite Land-Use Monitoring API",
         "status": "online",
-        "version": "0.6.0",
+        "version": "1.0.0",
         "endpoints": {
             "health": "/health",
             "docs": "/docs",

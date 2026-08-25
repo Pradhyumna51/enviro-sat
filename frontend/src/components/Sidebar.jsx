@@ -147,7 +147,7 @@ export default function Sidebar({
                 <div className="flex items-center gap-2">
                   <h1 className="text-sm font-bold tracking-tight text-white">Enviro-Sat</h1>
                   <Badge variant="outline" className="text-[9px] px-1 py-0 border-blue-500/40 text-blue-400 font-mono">
-                    v0.6
+                    v1.0.0
                   </Badge>
                 </div>
                 <p className="text-[11px] text-slate-400">Sentinel-2 Land Cover & Change AI</p>

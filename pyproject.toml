@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "eurosat-monitoring"
-version = "0.1.0"
+version = "1.0.0"
 description = "Portfolio-quality satellite land-use monitoring system based on EuroSAT Sentinel-2 imagery."
 readme = "DATASET.md"
 requires-python = ">=3.9"
