@@ -111,14 +111,22 @@ export default function DrawControl({ onBboxDrawn }) {
         dashArray: '8 4',
       }).addTo(map)
 
-      // Emit bbox [min_lon, min_lat, max_lon, max_lat]
+      // Emit normalized bbox [min_lon, min_lat, max_lon, max_lat]
       const sw = bounds.getSouthWest()
       const ne = bounds.getNorthEast()
+      let minLon = Math.min(sw.lng, ne.lng)
+      let maxLon = Math.max(sw.lng, ne.lng)
+      let minLat = Math.min(sw.lat, ne.lat)
+      let maxLat = Math.max(sw.lat, ne.lat)
+
+      if (maxLon - minLon < 0.01) maxLon = minLon + 0.10
+      if (maxLat - minLat < 0.01) maxLat = minLat + 0.10
+
       const bbox = [
-        Math.round(sw.lng * 1e6) / 1e6,
-        Math.round(sw.lat * 1e6) / 1e6,
-        Math.round(ne.lng * 1e6) / 1e6,
-        Math.round(ne.lat * 1e6) / 1e6,
+        Math.round(minLon * 1e6) / 1e6,
+        Math.round(minLat * 1e6) / 1e6,
+        Math.round(maxLon * 1e6) / 1e6,
+        Math.round(maxLat * 1e6) / 1e6,
       ]
       onBboxDrawn(bbox)
     }

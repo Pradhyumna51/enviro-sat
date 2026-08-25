@@ -103,6 +103,9 @@ def detect_regional_changes(
     5. Returns GeoJSON FeatureCollection with before/after labels and transition types.
     """
     start_time = time.time()
+    min_lon, min_lat, max_lon, max_lat = bbox
+    if min_lon >= max_lon or min_lat >= max_lat:
+        raise ValueError("Invalid bbox: min coordinates must be strictly less than max coordinates.")
 
     # 1. Fetch multi-temporal scenes
     scene_before = create_multi_temporal_scene(bbox=bbox, date=date_before, is_after=False)

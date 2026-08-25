@@ -1,10 +1,61 @@
 /**
  * Enviro-Sat API client.
- * Calls the FastAPI backend endpoints; base URL configurable via VITE_API_URL.
+ * Calls the FastAPI backend endpoints with automatic local/remote failover and timeout handling.
  */
 
-const DEFAULT_API_URL = 'https://enviro-sat-api.onrender.com';
-const BASE_URL = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:8000' : DEFAULT_API_URL);
+const REMOTE_API_URL = 'https://enviro-sat-api.onrender.com';
+const LOCAL_API_URL = 'http://localhost:8000';
+
+const isLocalHost = typeof window !== 'undefined' && (
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1' ||
+  window.location.hostname === '[::1]' ||
+  window.location.hostname === ''
+);
+
+// Determine candidate URLs in priority order
+const CANDIDATE_URLS = import.meta.env.VITE_API_URL
+  ? [import.meta.env.VITE_API_URL]
+  : isLocalHost
+    ? [LOCAL_API_URL, REMOTE_API_URL]
+    : [REMOTE_API_URL, LOCAL_API_URL];
+
+/**
+ * Robust fetch wrapper with timeout and fallback
+ */
+async function resilientFetch(endpoint, options = {}) {
+  let lastError = null;
+
+  for (const baseUrl of CANDIDATE_URLS) {
+    try {
+      const url = `${baseUrl}${endpoint}`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s timeout
+
+      const res = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || `Server responded with status ${res.status}`);
+      }
+
+      return await res.json();
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        lastError = new Error('Inference request timed out (45s). The cloud server may be waking up from sleep.');
+      } else {
+        lastError = err;
+      }
+      // If we have another candidate URL, try it
+    }
+  }
+
+  throw lastError || new Error('Failed to connect to Enviro-Sat API');
+}
 
 /**
  * POST /classify-region
@@ -12,16 +63,11 @@ const BASE_URL = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' 
  * @returns {Promise<object>} GeoJSON FeatureCollection
  */
 export async function classifyRegion({ bbox, date, confidence_threshold }) {
-  const res = await fetch(`${BASE_URL}/classify-region`, {
+  return resilientFetch('/classify-region', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ bbox, date, confidence_threshold }),
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || `API error ${res.status}`);
-  }
-  return res.json();
 }
 
 /**
@@ -30,16 +76,11 @@ export async function classifyRegion({ bbox, date, confidence_threshold }) {
  * @returns {Promise<object>} GeoJSON FeatureCollection
  */
 export async function detectChange({ bbox, date_before, date_after, confidence_threshold }) {
-  const res = await fetch(`${BASE_URL}/detect-change`, {
+  return resilientFetch('/detect-change', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ bbox, date_before, date_after, confidence_threshold }),
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || `API error ${res.status}`);
-  }
-  return res.json();
 }
 
 /**
@@ -47,9 +88,7 @@ export async function detectChange({ bbox, date_before, date_after, confidence_t
  * @returns {Promise<object>}
  */
 export async function fetchHealth() {
-  const res = await fetch(`${BASE_URL}/health`);
-  if (!res.ok) throw new Error(`Health check failed: ${res.status}`);
-  return res.json();
+  return resilientFetch('/health');
 }
 
 /**
@@ -57,7 +96,6 @@ export async function fetchHealth() {
  * @returns {Promise<object>}
  */
 export async function fetchSampleRegions() {
-  const res = await fetch(`${BASE_URL}/sample-regions`);
-  if (!res.ok) throw new Error(`Failed to fetch sample regions: ${res.status}`);
-  return res.json();
+  return resilientFetch('/sample-regions');
 }
+
