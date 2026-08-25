@@ -1,13 +1,3 @@
----
-title: Enviro Sat
-emoji: 🛰️
-colorFrom: blue
-colorTo: indigo
-sdk: static
-pinned: false
-license: mit
----
-
 # 🛰️ Enviro-Sat: Production Satellite Land-Use Monitoring & Change Detection System
 
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://python.org)
