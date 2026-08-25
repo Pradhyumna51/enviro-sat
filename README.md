@@ -203,30 +203,6 @@ docker-compose up --build
 
 ---
 
-## ☁️ Cloud Deployment Guide
-
-### Option 1: Hugging Face Spaces (Single Container - Free)
-1. Create a new **Hugging Face Space** with the **Docker** SDK.
-2. Connect your GitHub repository.
-3. Hugging Face will build the root [Dockerfile](file:///c:/Users/priyanka/OneDrive/Desktop/Projects/enviro-sat/Dockerfile) which automatically compiles the React frontend and serves both the API and UI on port `7860`.
-
-### Option 2: Render / Railway (Full Stack)
-1. **Backend**:
-   * Deploy as a Web Service using `Dockerfile.backend` (or Python environment with `uvicorn api.main:app --host 0.0.0.0 --port $PORT`).
-   * Health Check Path: `/health`.
-2. **Frontend**:
-   * Deploy `frontend/` as a Static Site on Render or Vercel.
-   * Build Command: `npm run build`.
-   * Output Directory: `dist`.
-   * Environment Variable: Set `VITE_API_URL` to your live backend URL.
-
-### Option 3: Vercel (Frontend Only)
-```bash
-cd frontend
-vercel
-```
-
----
 
 ## 🧪 Smoke-Test & Verification Commands
 
