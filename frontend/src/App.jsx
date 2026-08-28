@@ -1,25 +1,57 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import MapView from '@/components/MapView'
 import Sidebar from '@/components/Sidebar'
+import HeaderIsland from '@/components/HeaderIsland'
+import ChipInspectorModal from '@/components/ChipInspectorModal'
 import { useClassify } from '@/hooks/useClassify'
+import { fetchSampleRegions } from '@/api/client'
 import { injectHatchPattern } from '@/utils/patterns'
 
 /**
- * Root Application Container — connects Sidebar AI controls, Leaflet GeoJSON view, and inference pipelines.
+ * Root Application Container — connects Aerospace HeaderIsland, Tactical Control Deck,
+ * Leaflet GeoJSON layer, and Detailed Chip Inspector.
  */
 export default function App() {
   const [mode, setMode] = useState('classify')
   const [bbox, setBbox] = useState(null)
   const [flyBounds, setFlyBounds] = useState(null)
+  const [selectedFeature, setSelectedFeature] = useState(null)
+  const [isDrawTriggered, setIsDrawTriggered] = useState(false)
+  const [regions, setRegions] = useState({})
+  const [selectedRegion, setSelectedRegion] = useState('')
+
   const { data, loading, error, runClassify, runChange, clear } = useClassify()
 
   useEffect(() => {
     injectHatchPattern()
+    fetchSampleRegions()
+      .then(setRegions)
+      .catch(() => {
+        setRegions({
+          munich_urban_fringe: {
+            name: 'Munich Urban Fringe (Germany)',
+            bbox: [11.45, 48.10, 11.65, 48.25],
+          },
+          rhine_valley: {
+            name: 'Rhine Valley Farmland (France/Germany)',
+            bbox: [7.60, 48.45, 7.80, 48.60],
+          },
+          paris_metropolis: {
+            name: 'Paris Metropolis (France)',
+            bbox: [2.25, 48.80, 2.45, 48.92],
+          },
+          barcelona_coast: {
+            name: 'Barcelona Coast (Spain)',
+            bbox: [2.10, 41.35, 2.25, 41.45],
+          },
+        })
+      })
   }, [])
 
   // Clear previous analysis layer on mode switch
   useEffect(() => {
     clear()
+    setSelectedFeature(null)
   }, [mode, clear])
 
   const handleBboxDrawn = useCallback((newBbox) => {
@@ -30,16 +62,56 @@ export default function App() {
     setFlyBounds(bounds)
   }, [])
 
-  const handleAnalyze = useCallback((params) => {
-    if (mode === 'classify') {
-      runClassify(params)
-    } else {
-      runChange(params)
+  const handleSelectRegion = useCallback(
+    (key) => {
+      setSelectedRegion(key)
+      if (regions[key]) {
+        const b = regions[key].bbox
+        setBbox(b)
+        setFlyBounds([[b[1], b[0]], [b[3], b[2]]])
+      }
+    },
+    [regions]
+  )
+
+  const handleAnalyze = useCallback(
+    (params) => {
+      setSelectedFeature(null)
+      if (mode === 'classify') {
+        runClassify(params)
+      } else {
+        runChange(params)
+      }
+    },
+    [mode, runClassify, runChange]
+  )
+
+  const handleZoomToChip = useCallback((feat) => {
+    if (feat && feat.geometry && feat.geometry.coordinates) {
+      const coords = feat.geometry.coordinates[0]
+      const lats = coords.map((c) => c[1])
+      const lngs = coords.map((c) => c[0])
+      const bounds = [
+        [Math.min(...lats), Math.min(...lngs)],
+        [Math.max(...lats), Math.max(...lngs)],
+      ]
+      setFlyBounds(bounds)
     }
-  }, [mode, runClassify, runChange])
+  }, [])
 
   return (
-    <div className="flex h-screen w-screen bg-slate-950 overflow-hidden select-none">
+    <div className="relative flex h-screen w-screen bg-[#06080f] overflow-hidden select-none font-sans text-slate-100">
+      {/* Floating Tactical Top Command Bar */}
+      <HeaderIsland
+        mode={mode}
+        setMode={setMode}
+        regions={regions}
+        selectedRegion={selectedRegion}
+        onSelectRegion={handleSelectRegion}
+        activeBbox={bbox}
+      />
+
+      {/* Floating Tactical Control Deck */}
       <Sidebar
         mode={mode}
         setMode={setMode}
@@ -50,15 +122,32 @@ export default function App() {
         error={error}
         data={data}
         onFlyTo={handleFlyTo}
+        onTriggerDraw={() => setIsDrawTriggered(true)}
       />
-      <main className="flex-1 relative h-full">
+
+      {/* Primary Satellite Observation Map */}
+      <main className="flex-1 relative h-full w-full">
         <MapView
           geojsonData={data}
           mode={mode}
           flyBounds={flyBounds}
           onBboxDrawn={handleBboxDrawn}
+          onSelectFeature={setSelectedFeature}
+          isDrawTriggered={isDrawTriggered}
+          onResetDrawTrigger={() => setIsDrawTriggered(false)}
+          loading={loading}
         />
       </main>
+
+      {/* Interactive Chip Inspector Modal */}
+      {selectedFeature && (
+        <ChipInspectorModal
+          feature={selectedFeature}
+          mode={mode}
+          onClose={() => setSelectedFeature(null)}
+          onZoomToChip={handleZoomToChip}
+        />
+      )}
     </div>
   )
 }

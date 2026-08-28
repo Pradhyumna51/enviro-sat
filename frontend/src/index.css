@@ -2,35 +2,35 @@
 
 @layer base {
   :root {
-    --background: 222 47% 7%;
+    --background: 228 45% 4%;
     --foreground: 210 40% 98%;
 
-    --card: 222 47% 10%;
+    --card: 228 40% 6%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222 47% 9%;
+    --popover: 228 40% 7%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 9%;
 
-    --secondary: 217 33% 17%;
+    --secondary: 224 35% 12%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217 33% 15%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 224 30% 12%;
+    --muted-foreground: 217 19% 68%;
 
-    --accent: 38 92% 50%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 188 86% 53%;
+    --accent-foreground: 222 47% 9%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217 33% 18%;
-    --input: 217 33% 18%;
-    --ring: 221 83% 53%;
+    --border: 224 25% 16%;
+    --input: 224 25% 16%;
+    --ring: 217 91% 60%;
 
-    --radius: 0.5rem;
+    --radius: 1rem;
   }
 }
 
@@ -38,64 +38,205 @@
   * {
     border-color: hsl(var(--border));
   }
-  body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
-    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  
+  html, body {
+    background-color: #06080f;
+    color: #f1f5f9;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     margin: 0;
     padding: 0;
     overflow: hidden;
+    height: 100%;
+    width: 100%;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-variant-numeric: tabular-nums;
   }
 }
 
-/* Custom Scrollbar for high-density dashboard panels */
+/* Subtle Cinematic Noise Overlay (Fixed, Hardware Accelerated, Zero Layout Repaint) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0.022;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Double-Bezel (Doppelrand) Machined Enclosure Architecture */
+.double-bezel-outer {
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  padding: 0.375rem;
+  border-radius: 1.5rem;
+}
+
+.double-bezel-inner {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.85) 0%, rgba(9, 14, 26, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.12), 0 4px 12px rgba(0, 0, 0, 0.4);
+  border-radius: calc(1.5rem - 0.375rem);
+}
+
+/* Fluid Spring Cubic-Bezier Transitions */
+.transition-spring {
+  transition-property: all;
+  transition-duration: 400ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.transition-spring-slow {
+  transition-property: all;
+  transition-duration: 700ms;
+  transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: hsl(var(--background));
+  background: rgba(6, 8, 15, 0.5);
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--border));
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground));
+  background: rgba(56, 189, 248, 0.3);
 }
 
-/* Leaflet Container & Dark Popup Overrides */
+/* Leaflet Container Overrides */
 .leaflet-container {
-  background: #080d1a !important;
-  font-family: inherit;
+  background: #04060a !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
 }
 
+.leaflet-control-zoom {
+  border: none !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6) !important;
+  border-radius: 9999px !important;
+  overflow: hidden;
+  background: rgba(10, 15, 28, 0.85) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  margin-top: 5rem !important;
+  margin-left: 1.25rem !important;
+}
+
+.leaflet-control-zoom-in, .leaflet-control-zoom-out {
+  background: transparent !important;
+  color: #94a3b8 !important;
+  border: none !important;
+  width: 34px !important;
+  height: 34px !important;
+  line-height: 34px !important;
+  font-size: 16px !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.leaflet-control-zoom-in:hover, .leaflet-control-zoom-out:hover {
+  color: #38bdf8 !important;
+  background: rgba(56, 189, 248, 0.12) !important;
+}
+
+.leaflet-control-zoom-in {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.leaflet-control-attribution {
+  background: rgba(6, 8, 15, 0.75) !important;
+  backdrop-filter: blur(8px) !important;
+  color: #64748b !important;
+  font-size: 9px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  border-radius: 6px 0 0 0 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.05) !important;
+  padding: 2px 8px !important;
+}
+.leaflet-control-attribution a {
+  color: #94a3b8 !important;
+}
+
+/* Glassmorphism Tactical Popups */
 .envirosat-popup .leaflet-popup-content-wrapper {
-  background: rgba(15, 23, 42, 0.95);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  border-radius: 0.75rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(12px);
-  color: #f1f5f9;
-  padding: 0;
+  background: rgba(8, 12, 23, 0.92) !important;
+  border: 1px solid rgba(56, 189, 248, 0.28) !important;
+  border-radius: 1.125rem !important;
+  box-shadow: 0 28px 50px -10px rgba(0, 0, 0, 0.8), 0 0 24px rgba(56, 189, 248, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  color: #f1f5f9 !important;
+  padding: 0 !important;
 }
 
 .envirosat-popup .leaflet-popup-content {
-  margin: 0.75rem 1rem;
-  font-size: 0.8125rem;
-  line-height: 1.25rem;
+  margin: 0.85rem 1rem !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.35rem !important;
 }
 
 .envirosat-popup .leaflet-popup-tip {
-  background: rgba(15, 23, 42, 0.95);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: rgba(8, 12, 23, 0.92) !important;
+  border: 1px solid rgba(56, 189, 248, 0.28) !important;
 }
 
 .envirosat-popup .leaflet-popup-close-button {
-  color: #94a3b8 !important;
-  padding: 6px 8px !important;
+  color: #64748b !important;
+  padding: 8px 10px !important;
+  font-size: 16px !important;
+  transition: color 0.2s !important;
 }
 
 .envirosat-popup .leaflet-popup-close-button:hover {
-  color: #f8fafc !important;
+  color: #38bdf8 !important;
+}
+
+/* Radar Scan Beam Animation */
+@keyframes radar-sweep {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-radar-sweep {
+  animation: radar-sweep 3.5s linear infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+/* Grid Line Scan Pattern */
+.bg-grid-cyber {
+  background-size: 28px 28px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
 }

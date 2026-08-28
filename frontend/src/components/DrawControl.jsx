@@ -3,10 +3,10 @@ import { useMap } from 'react-leaflet'
 import L from 'leaflet'
 
 /**
- * DrawControl — lets users draw a rectangle on the map to define a custom bounding box.
- * Uses native Leaflet events with vector SVG control icon for professional UX.
+ * DrawControl — Tactical AOI rectangle drawing tool for Sentinel-2 spatial targeting.
+ * Integrates directly with Leaflet DOM and exposes smooth crosshair and holographic bounds.
  */
-export default function DrawControl({ onBboxDrawn }) {
+export default function DrawControl({ onBboxDrawn, isDrawTriggered, onResetDrawTrigger }) {
   const map = useMap()
   const drawnLayerRef = useRef(null)
   const isDrawingRef = useRef(false)
@@ -24,33 +24,54 @@ export default function DrawControl({ onBboxDrawn }) {
     }
   }, [map])
 
+  // Programmatic draw triggering from Sidebar
+  useEffect(() => {
+    if (isDrawTriggered) {
+      isDrawingRef.current = true
+      map.getContainer().style.cursor = 'crosshair'
+      const btn = document.querySelector('.envirosat-draw-btn')
+      if (btn) {
+        btn.style.background = 'rgba(6, 182, 212, 0.25)'
+        btn.style.color = '#38bdf8'
+        btn.style.borderColor = 'rgba(56, 189, 248, 0.6)'
+        btn.style.boxShadow = '0 0 16px rgba(6, 182, 212, 0.4)'
+      }
+      if (onResetDrawTrigger) onResetDrawTrigger()
+    }
+  }, [isDrawTriggered, map, onResetDrawTrigger])
+
   useEffect(() => {
     // Custom draw-rectangle control
     const DrawRectControl = L.Control.extend({
       options: { position: 'topleft' },
       onAdd() {
-        const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control envirosat-draw-control')
+        const container = L.DomUtil.create(
+          'div',
+          'leaflet-bar leaflet-control envirosat-draw-control'
+        )
         const btn = L.DomUtil.create('a', 'envirosat-draw-btn', container)
         btn.href = '#'
-        btn.title = 'Draw Custom Bounding Box'
-        // Clean vector icon: Square with dashed border
-        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bounding-box"><rect width="18" height="18" x="3" y="3" rx="2" stroke-dasharray="3 3"/><circle cx="3" cy="3" r="1.5" fill="currentColor"/><circle cx="21" cy="3" r="1.5" fill="currentColor"/><circle cx="21" cy="21" r="1.5" fill="currentColor"/><circle cx="3" cy="21" r="1.5" fill="currentColor"/></svg>`
-        btn.style.cssText = 'display:flex;align-items:center;justify-content:center;width:34px;height:34px;text-decoration:none;background:#0f172a;color:#94a3b8;border:1px solid #334155;border-radius:6px;cursor:pointer;transition:all 0.2s;'
+        btn.title = 'Define Custom AOI Bounding Box (Click & Drag on Map)'
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="3" stroke-dasharray="4 3"/><circle cx="3" cy="3" r="2" fill="currentColor"/><circle cx="21" cy="3" r="2" fill="currentColor"/><circle cx="21" cy="21" r="2" fill="currentColor"/><circle cx="3" cy="21" r="2" fill="currentColor"/></svg>`
+        btn.style.cssText =
+          'display:flex;align-items:center;justify-content:center;width:34px;height:34px;text-decoration:none;background:rgba(10,15,28,0.85);color:#94a3b8;border:1px solid rgba(255,255,255,0.12);border-radius:9999px;cursor:pointer;transition:all 0.2s cubic-bezier(0.16,1,0.3,1);backdrop-filter:blur(16px);box-shadow:0 12px 25px rgba(0,0,0,0.5);margin-top:1.25rem;margin-left:1.25rem;'
 
         L.DomEvent.on(btn, 'click', (e) => {
           L.DomEvent.stop(e)
           if (isDrawingRef.current) {
             isDrawingRef.current = false
-            btn.style.background = '#0f172a'
+            btn.style.background = 'rgba(10,15,28,0.85)'
             btn.style.color = '#94a3b8'
-            btn.style.borderColor = '#334155'
+            btn.style.borderColor = 'rgba(255,255,255,0.12)'
+            btn.style.boxShadow = '0 12px 25px rgba(0,0,0,0.5)'
             map.getContainer().style.cursor = ''
             clearPrevious()
           } else {
             isDrawingRef.current = true
-            btn.style.background = '#2563eb'
-            btn.style.color = '#ffffff'
-            btn.style.borderColor = '#3b82f6'
+            btn.style.background = 'rgba(6, 182, 212, 0.25)'
+            btn.style.color = '#38bdf8'
+            btn.style.borderColor = 'rgba(56, 189, 248, 0.6)'
+            btn.style.boxShadow = '0 0 16px rgba(6, 182, 212, 0.4)'
             map.getContainer().style.cursor = 'crosshair'
           }
         })
@@ -75,10 +96,10 @@ export default function DrawControl({ onBboxDrawn }) {
         previewRectRef.current.setBounds(bounds)
       } else {
         previewRectRef.current = L.rectangle(bounds, {
-          color: '#3b82f6',
+          color: '#38bdf8',
           weight: 2,
           fillOpacity: 0.15,
-          dashArray: '6 3',
+          dashArray: '6 4',
         }).addTo(map)
       }
     }
@@ -95,18 +116,20 @@ export default function DrawControl({ onBboxDrawn }) {
       // Reset button style
       const btn = document.querySelector('.envirosat-draw-btn')
       if (btn) {
-        btn.style.background = '#0f172a'
+        btn.style.background = 'rgba(10,15,28,0.85)'
         btn.style.color = '#94a3b8'
-        btn.style.borderColor = '#334155'
+        btn.style.borderColor = 'rgba(255,255,255,0.12)'
+        btn.style.boxShadow = '0 12px 25px rgba(0,0,0,0.5)'
       }
 
       // Clear preview
       clearPrevious()
 
-      // Draw final rectangle
+      // Draw glowing persistent AOI boundary rectangle
       drawnLayerRef.current = L.rectangle(bounds, {
-        color: '#60a5fa',
+        color: '#06b6d4',
         weight: 2,
+        fillColor: '#06b6d4',
         fillOpacity: 0.08,
         dashArray: '8 4',
       }).addTo(map)

@@ -1,23 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { fetchSampleRegions } from '@/api/client'
-import Legend from './Legend'
-import StatsPanel from './StatsPanel'
-import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Slider } from '@/components/ui/slider'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { Separator } from '@/components/ui/separator'
-import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
   Satellite,
-  Map as MapIcon,
+  Layers,
   GitCompareArrows,
   Calendar,
   SlidersHorizontal,
@@ -29,10 +13,20 @@ import {
   MapPin,
   Loader2,
   Sparkles,
+  Crosshair,
+  Compass,
+  Trash2,
+  ArrowRight,
+  ShieldCheck,
 } from 'lucide-react'
+import { fetchSampleRegions } from '@/api/client'
+import Legend from './Legend'
+import StatsPanel from './StatsPanel'
+import { Slider } from '@/components/ui/slider'
 
 /**
- * High-density operational sidebar built with shadcn/ui components and Lucide icons.
+ * Tactical Control Deck — Nested Double-Bezel floating control dock.
+ * Features Button-in-Button CTA, acquisition timeline gates, AOI coordinate telemetry, and Bayesian confidence slider.
  */
 export default function Sidebar({
   mode,
@@ -44,6 +38,7 @@ export default function Sidebar({
   error,
   data,
   onFlyTo,
+  onTriggerDraw,
 }) {
   const [regions, setRegions] = useState({})
   const [selectedRegion, setSelectedRegion] = useState('')
@@ -70,7 +65,8 @@ export default function Sidebar({
       })
   }, [])
 
-  const handleRegionSelect = (key) => {
+  const handleRegionSelect = (e) => {
+    const key = e.target.value
     setSelectedRegion(key)
     if (regions[key]) {
       const b = regions[key].bbox
@@ -93,229 +89,276 @@ export default function Sidebar({
     }
   }
 
+  const handleClearBbox = () => {
+    setBbox(null)
+    setSelectedRegion('')
+  }
+
   const bboxFormatted = bbox
     ? `[${bbox[0].toFixed(2)}, ${bbox[1].toFixed(2)}, ${bbox[2].toFixed(2)}, ${bbox[3].toFixed(2)}]`
-    : 'No bounding box active'
+    : 'No active AOI boundary'
 
   return (
     <aside
-      className={`relative z-20 flex flex-col h-full bg-slate-950/95 border-r border-slate-800/90 text-slate-100 transition-all duration-300 ease-in-out backdrop-blur-xl shadow-2xl ${
-        collapsed ? 'w-12' : 'w-84'
+      className={`fixed top-20 bottom-6 left-4 z-30 flex transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        collapsed ? 'w-14' : 'w-88 sm:w-96'
       }`}
     >
-      {/* Collapse Toggle Button */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-4 z-30 flex size-6 items-center justify-center rounded-full border border-slate-700 bg-slate-900 text-slate-300 shadow-md hover:bg-slate-800 hover:text-white cursor-pointer transition-colors"
-        title={collapsed ? 'Expand Console' : 'Collapse Console'}
-      >
-        {collapsed ? <ChevronRight className="size-3.5" /> : <ChevronLeft className="size-3.5" />}
-      </button>
+      {/* Outer Shell (Double-Bezel) */}
+      <div className="double-bezel-outer w-full h-full flex flex-col relative overflow-hidden">
+        {/* Inner Core */}
+        <div className="double-bezel-inner flex-1 flex flex-col h-full overflow-hidden p-3.5 sm:p-4 text-slate-100">
+          {/* Collapse/Expand Floating Button */}
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="absolute -right-3 top-6 z-40 flex size-6.5 items-center justify-center rounded-full bg-slate-900 border border-white/20 text-slate-300 shadow-xl hover:bg-slate-800 hover:text-white cursor-pointer transition-spring"
+            title={collapsed ? 'Expand Tactical Console' : 'Collapse Console'}
+          >
+            {collapsed ? <ChevronRight className="size-3.5" /> : <ChevronLeft className="size-3.5" />}
+          </button>
 
-      {collapsed ? (
-        /* Collapsed Icon Bar */
-        <div className="flex flex-col items-center py-4 gap-4">
-          <div className="size-8 rounded-lg bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400">
-            <Satellite className="size-4" />
-          </div>
-          <Separator className="w-6 bg-slate-800" />
-          <button
-            onClick={() => { setCollapsed(false); setMode('classify') }}
-            className={`p-2 rounded-md transition-colors ${mode === 'classify' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-900'}`}
-            title="Classify Mode"
-          >
-            <MapIcon className="size-4" />
-          </button>
-          <button
-            onClick={() => { setCollapsed(false); setMode('change') }}
-            className={`p-2 rounded-md transition-colors ${mode === 'change' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-900'}`}
-            title="Change Detection Mode"
-          >
-            <GitCompareArrows className="size-4" />
-          </button>
-        </div>
-      ) : (
-        /* Full Console Panel */
-        <div className="flex flex-col h-full overflow-hidden">
-          {/* Header */}
-          <div className="p-4 pb-3 border-b border-slate-800/80 bg-slate-900/40">
-            <div className="flex items-center gap-2.5">
-              <div className="size-9 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-inner">
-                <Satellite className="size-5" />
-              </div>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2">
-                  <h1 className="text-sm font-bold tracking-tight text-white">Enviro-Sat</h1>
-                  <Badge variant="outline" className="text-[9px] px-1 py-0 border-blue-500/40 text-blue-400 font-mono">
-                    v1.0.0
-                  </Badge>
+          {collapsed ? (
+            /* Collapsed Minimal Icon Dock */
+            <div className="flex flex-col items-center py-2 gap-4 h-full justify-between">
+              <div className="flex flex-col items-center gap-3">
+                <div className="size-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                  <Compass className="size-4" />
                 </div>
-                <p className="text-[11px] text-slate-400">Sentinel-2 Land Cover & Change AI</p>
+                <div className="h-[1px] w-6 bg-white/10" />
+                <button
+                  onClick={() => {
+                    setCollapsed(false)
+                    setMode('classify')
+                  }}
+                  className={`p-2 rounded-xl transition-spring cursor-pointer ${
+                    mode === 'classify'
+                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                      : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }`}
+                  title="Land Cover Classification"
+                >
+                  <Layers className="size-4" />
+                </button>
+                <button
+                  onClick={() => {
+                    setCollapsed(false)
+                    setMode('change')
+                  }}
+                  className={`p-2 rounded-xl transition-spring cursor-pointer ${
+                    mode === 'change'
+                      ? 'bg-blue-600/30 text-blue-300 border border-blue-500/40'
+                      : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }`}
+                  title="Multi-Temporal Change AI"
+                >
+                  <GitCompareArrows className="size-4" />
+                </button>
               </div>
-            </div>
-          </div>
 
-          {/* Scrollable Control Body */}
-          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3.5">
-            {/* Mode Selector */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Analysis Pipeline
-              </label>
-              <ToggleGroup
-                type="single"
-                value={mode}
-                onValueChange={(val) => { if (val) setMode(val) }}
-                className="w-full"
+              <button
+                onClick={handleAnalyze}
+                disabled={loading || !bbox}
+                className="size-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-lg disabled:opacity-40 cursor-pointer"
+                title="Execute Inference"
               >
-                <ToggleGroupItem value="classify" className="flex items-center gap-1.5 py-1.5">
-                  <MapIcon className="size-3.5" />
-                  <span>Land Cover</span>
-                </ToggleGroupItem>
-                <ToggleGroupItem value="change" className="flex items-center gap-1.5 py-1.5">
-                  <GitCompareArrows className="size-3.5" />
-                  <span>Change AI</span>
-                </ToggleGroupItem>
-              </ToggleGroup>
+                {loading ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
+              </button>
             </div>
-
-            {/* Benchmark Preset Regions */}
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                  <MapPin className="size-3" />
-                  Sample Target Region
-                </label>
-              </div>
-              <Select value={selectedRegion} onValueChange={handleRegionSelect}>
-                <SelectTrigger className="w-full h-8 text-xs bg-slate-900 border-slate-700">
-                  <SelectValue placeholder="Choose a preset region..." />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-700">
-                  {Object.entries(regions).map(([key, region]) => (
-                    <SelectItem key={key} value={key} className="text-xs">
-                      {region.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Bounding Box Info */}
-            <div className="flex flex-col gap-1 p-2 rounded-md bg-slate-900/60 border border-slate-800">
-              <div className="flex items-center justify-between text-[10px] text-slate-400">
-                <span className="font-semibold uppercase tracking-wider">Spatial Extent (EPSG:4326)</span>
-                {bbox && <span className="text-blue-400 font-mono text-[9px]">Active</span>}
-              </div>
-              <span className="text-[11px] font-mono text-slate-300 truncate">
-                {bboxFormatted}
-              </span>
-            </div>
-
-            {/* Acquisition Date Picker */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                <Calendar className="size-3" />
-                {mode === 'classify' ? 'Target Acquisition Date' : 'Multi-Temporal Timestamps'}
-              </label>
-
-              {mode === 'classify' ? (
-                <input
-                  type="date"
-                  className="w-full h-8 px-2.5 rounded-md border border-slate-700 bg-slate-900 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                />
-              ) : (
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[9px] uppercase font-semibold text-slate-500">T1 (Baseline)</span>
-                    <input
-                      type="date"
-                      className="w-full h-8 px-2 rounded-md border border-slate-700 bg-slate-900 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      value={dateBefore}
-                      onChange={(e) => setDateBefore(e.target.value)}
-                    />
+          ) : (
+            /* Expanded Full Tactical Console */
+            <div className="flex flex-col h-full overflow-hidden">
+              {/* Header Title */}
+              <div className="pb-3 mb-2 border-b border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="size-7 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                    <Compass className="size-4" />
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[9px] uppercase font-semibold text-slate-500">T2 (Current)</span>
-                    <input
-                      type="date"
-                      className="w-full h-8 px-2 rounded-md border border-slate-700 bg-slate-900 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      value={dateAfter}
-                      onChange={(e) => setDateAfter(e.target.value)}
-                    />
+                  <div>
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-white font-mono">
+                      Tactical Mission Deck
+                    </h2>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      Active: {mode === 'classify' ? 'Land-Cover Seg' : 'Temporal Change'}
+                    </span>
                   </div>
                 </div>
-              )}
-            </div>
 
-            {/* Confidence Threshold Slider */}
-            <div className="flex flex-col gap-2 p-2.5 rounded-md bg-slate-900/60 border border-slate-800">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-slate-300 flex items-center gap-1.5">
-                  <SlidersHorizontal className="size-3 text-amber-400" />
-                  Confidence Gate
+                <span className="rounded-full bg-cyan-500/10 border border-cyan-500/30 px-2 py-0.5 text-[9px] font-mono text-cyan-300">
+                  Ready
                 </span>
-                <Badge variant="outline" className="font-mono text-[10px] text-amber-400 border-amber-500/30">
-                  {(confidence * 100).toFixed(0)}%
-                </Badge>
               </div>
-              <Slider
-                value={[confidence]}
-                onValueChange={(val) => setConfidence(val[0])}
-                min={0.5}
-                max={0.95}
-                step={0.05}
-                className="py-1"
-              />
-              <div className="flex justify-between text-[9px] text-slate-500 font-mono">
-                <span>50% (Permissive)</span>
-                <span>95% (Strict)</span>
+
+              {/* Scrollable Controls Section */}
+              <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-3.5">
+                {/* AOI Extent & Coordinates Box */}
+                <div className="p-3 rounded-2xl bg-slate-950/70 border border-white/10 flex flex-col gap-2">
+                  <div className="flex items-center justify-between text-[10px] font-mono font-bold text-slate-400 uppercase">
+                    <span className="flex items-center gap-1">
+                      <Crosshair className="size-3 text-cyan-400" />
+                      Spatial AOI Extent
+                    </span>
+                    {bbox ? (
+                      <button
+                        onClick={handleClearBbox}
+                        className="text-red-400 hover:text-red-300 flex items-center gap-0.5 cursor-pointer"
+                        title="Clear AOI"
+                      >
+                        <Trash2 className="size-2.5" />
+                        <span>Clear</span>
+                      </button>
+                    ) : (
+                      <span className="text-amber-400">Pending Draw</span>
+                    )}
+                  </div>
+
+                  <div className="p-2 rounded-xl bg-slate-900/90 border border-white/5 font-mono text-[11px] text-cyan-300 truncate">
+                    {bboxFormatted}
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    <select
+                      value={selectedRegion}
+                      onChange={handleRegionSelect}
+                      className="flex-1 h-8 rounded-xl bg-slate-900 border border-white/10 text-[11px] text-slate-300 px-2 focus:outline-none focus:border-cyan-500 cursor-pointer"
+                    >
+                      <option value="">Choose preset calibration site...</option>
+                      {Object.entries(regions).map(([key, reg]) => (
+                        <option key={key} value={key}>
+                          {reg.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    {onTriggerDraw && (
+                      <button
+                        onClick={onTriggerDraw}
+                        className="h-8 px-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-300 hover:text-white flex items-center gap-1 text-[11px] font-medium transition-spring cursor-pointer shrink-0"
+                        title="Draw Custom Rectangle"
+                      >
+                        <Crosshair className="size-3 text-cyan-400" />
+                        <span>Draw</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Acquisition Date Picker */}
+                <div className="p-3 rounded-2xl bg-slate-950/70 border border-white/10 flex flex-col gap-2">
+                  <label className="text-[10px] font-bold uppercase tracking-wider font-mono text-slate-400 flex items-center gap-1.5">
+                    <Calendar className="size-3 text-cyan-400" />
+                    {mode === 'classify' ? 'Sentinel-2 Acquisition Pass' : 'Temporal Baseline & Target Passes'}
+                  </label>
+
+                  {mode === 'classify' ? (
+                    <input
+                      type="date"
+                      className="w-full h-8 px-3 rounded-xl border border-white/10 bg-slate-900 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-mono"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                    />
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2 font-mono">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[9px] uppercase font-semibold text-slate-500">
+                          T1 Baseline
+                        </span>
+                        <input
+                          type="date"
+                          className="w-full h-8 px-2 rounded-xl border border-white/10 bg-slate-900 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
+                          value={dateBefore}
+                          onChange={(e) => setDateBefore(e.target.value)}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[9px] uppercase font-semibold text-cyan-400">
+                          T2 Current
+                        </span>
+                        <input
+                          type="date"
+                          className="w-full h-8 px-2 rounded-xl border border-cyan-500/30 bg-slate-900 text-xs text-cyan-300 focus:outline-none focus:border-cyan-500"
+                          value={dateAfter}
+                          onChange={(e) => setDateAfter(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Calibrated Confidence Gate Slider */}
+                <div className="p-3 rounded-2xl bg-slate-950/70 border border-white/10 flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-slate-300 flex items-center gap-1.5 font-sans">
+                      <SlidersHorizontal className="size-3 text-amber-400" />
+                      Bayesian Confidence Gate
+                    </span>
+                    <span className="font-mono text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                      {(confidence * 100).toFixed(0)}%
+                    </span>
+                  </div>
+
+                  <Slider
+                    value={[confidence]}
+                    onValueChange={(val) => setConfidence(val[0])}
+                    min={0.5}
+                    max={0.95}
+                    step={0.05}
+                    className="py-1"
+                  />
+
+                  <div className="flex justify-between text-[9px] text-slate-500 font-mono">
+                    <span>50% (Permissive)</span>
+                    <span>70% (Optimal)</span>
+                    <span>95% (Strict)</span>
+                  </div>
+                </div>
+
+                {/* Nested "Button-in-Button" Trailing Icon CTA */}
+                <button
+                  onClick={handleAnalyze}
+                  disabled={loading || !bbox}
+                  className="group relative flex items-center justify-between w-full p-1.5 pl-4 rounded-full bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:via-blue-500 hover:to-indigo-500 text-white font-bold text-xs tracking-tight shadow-[0_12px_28px_rgba(6,182,212,0.35)] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-spring active:scale-[0.98] overflow-hidden"
+                >
+                  <span className="font-sans font-semibold tracking-wide">
+                    {loading
+                      ? 'Inferencing Surface Chips...'
+                      : mode === 'classify'
+                      ? 'Execute Land-Cover AI'
+                      : 'Run Temporal Change Detection'}
+                  </span>
+
+                  {/* Nested Button-in-Button Trailing Icon Circle */}
+                  <div className="size-8 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white shadow-inner group-hover:scale-105 group-hover:translate-x-0.5 transition-spring shrink-0">
+                    {loading ? (
+                      <Loader2 className="size-4 animate-spin text-white" />
+                    ) : (
+                      <Search className="size-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                    )}
+                  </div>
+                </button>
+
+                {/* Error Alert */}
+                {error && (
+                  <div className="p-3 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-start gap-2 text-xs text-red-200">
+                    <AlertCircle className="size-4 text-red-400 shrink-0 mt-0.5" />
+                    <div className="flex flex-col">
+                      <span className="font-bold text-red-300 font-mono text-[10px]">
+                        INFERENCE_ERROR
+                      </span>
+                      <span className="leading-tight mt-0.5">{error}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Class Taxonomy Legend */}
+                <Legend mode={mode} />
+
+                {/* Performance Analytics & Stats */}
+                <StatsPanel data={data} mode={mode} />
               </div>
             </div>
-
-            {/* Action Trigger Button */}
-            <Button
-              onClick={handleAnalyze}
-              disabled={loading || !bbox}
-              className="w-full h-10 font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-950/50 mt-1 cursor-pointer"
-            >
-              {loading ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="size-4 animate-spin" />
-                  <span>Processing Scene Chips...</span>
-                </div>
-              ) : mode === 'classify' ? (
-                <div className="flex items-center gap-2">
-                  <Search className="size-4" />
-                  <span>Classify Satellite Region</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <RefreshCw className="size-4" />
-                  <span>Execute Change Detection</span>
-                </div>
-              )}
-            </Button>
-
-            {/* Error Notification */}
-            {error && (
-              <Alert variant="destructive" className="mt-1">
-                <AlertCircle className="size-4" />
-                <AlertTitle>Inference Failed</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            {/* Class / Change Legend */}
-            <Legend mode={mode} />
-
-            {/* Performance Analytics & Stats */}
-            <StatsPanel data={data} mode={mode} />
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </aside>
   )
 }

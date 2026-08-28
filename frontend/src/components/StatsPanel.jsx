@@ -1,11 +1,10 @@
 import React from 'react'
 import { CLASS_COLORS, CHANGE_COLORS } from '@/utils/colors'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { BarChart3, Clock, CheckCircle2, AlertTriangle, TrendingUp } from 'lucide-react'
+import { BarChart3, Clock, TrendingUp, Cpu, CheckCircle2, ShieldAlert } from 'lucide-react'
 
 /**
- * Summary statistics panel with Tailwind progress bars and KPI metrics.
+ * StatsPanel — High-density tactical telemetry analytics deck.
+ * Displays KPI metrics, transition dynamics, and land-cover composition.
  */
 export default function StatsPanel({ data, mode }) {
   if (!data || !data.metadata) return null
@@ -18,70 +17,81 @@ export default function StatsPanel({ data, mode }) {
     const maxVal = Math.max(...entries.map(([, v]) => v), 1)
 
     return (
-      <Card className="border-slate-800 bg-slate-900/60 shadow-sm mt-3">
-        <CardHeader className="p-3 pb-2 flex flex-row items-center justify-between space-y-0">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-200">
+      <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-white/10 flex flex-col gap-3 font-sans shadow-md">
+        <div className="flex items-center justify-between border-b border-white/10 pb-2">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-200">
             <TrendingUp className="size-3.5 text-amber-400" />
-            <span>Temporal Change Analytics</span>
+            <span>Temporal Shift Analytics</span>
           </div>
-          <Badge variant="warning" className="text-[10px] px-1.5 py-0">
-            {meta.change_rate_percent}% Shift
-          </Badge>
-        </CardHeader>
-        <CardContent className="p-3 pt-1 flex flex-col gap-2.5">
-          {/* KPI Metrics */}
-          <div className="grid grid-cols-3 gap-1.5">
-            <div className="flex flex-col items-center justify-center p-2 rounded-md bg-slate-950/70 border border-slate-800">
-              <span className="text-xs font-bold text-red-400 font-mono">{meta.changed_tiles_count}</span>
-              <span className="text-[9px] uppercase tracking-wider text-slate-400">Changed</span>
-            </div>
-            <div className="flex flex-col items-center justify-center p-2 rounded-md bg-slate-950/70 border border-slate-800">
-              <span className="text-xs font-bold text-emerald-400 font-mono">{meta.total_tiles - meta.changed_tiles_count}</span>
-              <span className="text-[9px] uppercase tracking-wider text-slate-400">Stable</span>
-            </div>
-            <div className="flex flex-col items-center justify-center p-2 rounded-md bg-slate-950/70 border border-slate-800">
-              <span className="text-xs font-bold text-slate-200 font-mono">{meta.total_tiles}</span>
-              <span className="text-[9px] uppercase tracking-wider text-slate-400">Total</span>
-            </div>
-          </div>
+          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400">
+            {meta.change_rate_percent}% Shift Rate
+          </span>
+        </div>
 
-          {/* Transition Breakdown Bars */}
-          {entries.length > 0 ? (
-            <div className="flex flex-col gap-1.5 mt-1">
-              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                Transition Dynamics
-              </span>
+        {/* KPI Triad */}
+        <div className="grid grid-cols-3 gap-1.5 font-mono">
+          <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-900/90 border border-red-500/20">
+            <span className="text-xs font-bold text-red-400">{meta.changed_tiles_count}</span>
+            <span className="text-[8px] uppercase tracking-wider text-slate-400 mt-0.5">Shifted</span>
+          </div>
+          <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-900/90 border border-emerald-500/20">
+            <span className="text-xs font-bold text-emerald-400">
+              {meta.total_tiles - meta.changed_tiles_count}
+            </span>
+            <span className="text-[8px] uppercase tracking-wider text-slate-400 mt-0.5">Stable</span>
+          </div>
+          <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-900/90 border border-white/5">
+            <span className="text-xs font-bold text-slate-200">{meta.total_tiles}</span>
+            <span className="text-[8px] uppercase tracking-wider text-slate-400 mt-0.5">Chips</span>
+          </div>
+        </div>
+
+        {/* Dynamic Transition Matrix Bars */}
+        {entries.length > 0 ? (
+          <div className="flex flex-col gap-2 mt-0.5">
+            <span className="text-[9px] font-bold uppercase tracking-widest font-mono text-slate-400">
+              Transition Dynamics
+            </span>
+            <div className="flex flex-col gap-1.5">
               {entries.map(([type, count]) => (
-                <div key={type} className="flex items-center gap-2 text-[11px]">
-                  <span className="w-28 truncate text-slate-300" title={type}>{type}</span>
-                  <div className="flex-1 h-2 rounded-full bg-slate-950 border border-slate-800/80 overflow-hidden">
+                <div key={type} className="flex flex-col gap-1 text-[11px]">
+                  <div className="flex items-center justify-between text-slate-300">
+                    <span className="truncate max-w-[200px]" title={type}>
+                      {type}
+                    </span>
+                    <span className="font-mono text-[10px] text-slate-400">{count}</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-slate-900 border border-white/5 overflow-hidden">
                     <div
-                      className="h-full rounded-full transition-all duration-500"
+                      className="h-full rounded-full transition-all duration-700"
                       style={{
                         width: `${Math.max(4, (count / maxVal) * 100)}%`,
                         backgroundColor: CHANGE_COLORS[type] || '#8b5cf6',
                       }}
                     />
                   </div>
-                  <span className="w-6 text-right font-mono text-[10px] text-slate-400">{count}</span>
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="text-[11px] text-slate-400 text-center py-2 bg-slate-950/40 rounded border border-dashed border-slate-800">
-              No high-confidence changes detected across timestamps.
-            </div>
-          )}
-
-          <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-800/80">
-            <span className="flex items-center gap-1">
-              <Clock className="size-3" />
-              Inference: {meta.processing_time_ms}ms
-            </span>
-            <span>Threshold: {(meta.confidence_threshold * 100).toFixed(0)}%</span>
           </div>
-        </CardContent>
-      </Card>
+        ) : (
+          <div className="text-[11px] text-slate-400 text-center py-2.5 bg-slate-900/40 rounded-xl border border-dashed border-white/10 font-mono">
+            No significant transitions detected
+          </div>
+        )}
+
+        {/* Telemetry Footer */}
+        <div className="flex items-center justify-between text-[9px] text-slate-400 font-mono pt-2 border-t border-white/5">
+          <span className="flex items-center gap-1">
+            <Clock className="size-3 text-cyan-400" />
+            {meta.processing_time_ms}ms
+          </span>
+          <span className="flex items-center gap-1">
+            <Cpu className="size-3 text-cyan-400" />
+            Gate: {(meta.confidence_threshold * 100).toFixed(0)}%
+          </span>
+        </div>
+      </div>
     )
   }
 
@@ -91,65 +101,74 @@ export default function StatsPanel({ data, mode }) {
   const maxVal = Math.max(...entries.map(([, v]) => v), 1)
 
   return (
-    <Card className="border-slate-800 bg-slate-900/60 shadow-sm mt-3">
-      <CardHeader className="p-3 pb-2 flex flex-row items-center justify-between space-y-0">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-200">
-          <BarChart3 className="size-3.5 text-blue-400" />
-          <span>Regional Distribution</span>
+    <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-white/10 flex flex-col gap-3 font-sans shadow-md">
+      <div className="flex items-center justify-between border-b border-white/10 pb-2">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-200">
+          <BarChart3 className="size-3.5 text-cyan-400" />
+          <span>Surface Composition</span>
         </div>
-        <Badge variant="default" className="text-[10px] px-1.5 py-0">
-          {meta.total_tiles} Chips
-        </Badge>
-      </CardHeader>
-      <CardContent className="p-3 pt-1 flex flex-col gap-2.5">
-        {/* KPI Metrics */}
-        <div className="grid grid-cols-3 gap-1.5">
-          <div className="flex flex-col items-center justify-center p-2 rounded-md bg-slate-950/70 border border-slate-800">
-            <span className="text-xs font-bold text-blue-400 font-mono">{meta.total_tiles}</span>
-            <span className="text-[9px] uppercase tracking-wider text-slate-400">Classified</span>
-          </div>
-          <div className="flex flex-col items-center justify-center p-2 rounded-md bg-slate-950/70 border border-slate-800">
-            <span className="text-xs font-bold text-amber-400 font-mono">{meta.tiles_needing_review}</span>
-            <span className="text-[9px] uppercase tracking-wider text-slate-400">Review</span>
-          </div>
-          <div className="flex flex-col items-center justify-center p-2 rounded-md bg-slate-950/70 border border-slate-800">
-            <span className="text-xs font-bold text-slate-200 font-mono">{meta.review_rate_percent}%</span>
-            <span className="text-[9px] uppercase tracking-wider text-slate-400">Uncertain</span>
-          </div>
-        </div>
+        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300">
+          {meta.total_tiles} Chips Evaluated
+        </span>
+      </div>
 
-        {/* Distribution Bars */}
-        {entries.length > 0 && (
-          <div className="flex flex-col gap-1.5 mt-1">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-              Land Cover Composition
-            </span>
+      {/* KPI Triad */}
+      <div className="grid grid-cols-3 gap-1.5 font-mono">
+        <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-900/90 border border-cyan-500/20">
+          <span className="text-xs font-bold text-cyan-400">{meta.total_tiles}</span>
+          <span className="text-[8px] uppercase tracking-wider text-slate-400 mt-0.5">Segmented</span>
+        </div>
+        <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-900/90 border border-amber-500/20">
+          <span className="text-xs font-bold text-amber-400">{meta.tiles_needing_review}</span>
+          <span className="text-[8px] uppercase tracking-wider text-slate-400 mt-0.5">Review</span>
+        </div>
+        <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-900/90 border border-white/5">
+          <span className="text-xs font-bold text-slate-200">{meta.review_rate_percent}%</span>
+          <span className="text-[8px] uppercase tracking-wider text-slate-400 mt-0.5">Uncertain</span>
+        </div>
+      </div>
+
+      {/* Distribution Bars */}
+      {entries.length > 0 && (
+        <div className="flex flex-col gap-2 mt-0.5">
+          <span className="text-[9px] font-bold uppercase tracking-widest font-mono text-slate-400">
+            Land Cover Taxonomy Breakdown
+          </span>
+          <div className="flex flex-col gap-1.5">
             {entries.map(([cls, count]) => (
-              <div key={cls} className="flex items-center gap-2 text-[11px]">
-                <span className="w-28 truncate text-slate-300" title={cls}>{cls}</span>
-                <div className="flex-1 h-2 rounded-full bg-slate-950 border border-slate-800/80 overflow-hidden">
+              <div key={cls} className="flex flex-col gap-1 text-[11px]">
+                <div className="flex items-center justify-between text-slate-300">
+                  <span className="truncate max-w-[200px]" title={cls}>
+                    {cls}
+                  </span>
+                  <span className="font-mono text-[10px] text-slate-400">{count}</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-slate-900 border border-white/5 overflow-hidden">
                   <div
-                    className="h-full rounded-full transition-all duration-500"
+                    className="h-full rounded-full transition-all duration-700"
                     style={{
                       width: `${Math.max(4, (count / maxVal) * 100)}%`,
-                      backgroundColor: CLASS_COLORS[cls] || '#3b82f6',
+                      backgroundColor: CLASS_COLORS[cls] || '#38bdf8',
                     }}
                   />
                 </div>
-                <span className="w-6 text-right font-mono text-[10px] text-slate-400">{count}</span>
               </div>
             ))}
           </div>
-        )}
-
-        <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-800/80">
-          <span className="flex items-center gap-1">
-            <Clock className="size-3" />
-            Inference: {meta.processing_time_ms}ms
-          </span>
-          <span>Threshold: {(meta.confidence_threshold * 100).toFixed(0)}%</span>
         </div>
-      </CardContent>
-    </Card>
+      )}
+
+      {/* Telemetry Footer */}
+      <div className="flex items-center justify-between text-[9px] text-slate-400 font-mono pt-2 border-t border-white/5">
+        <span className="flex items-center gap-1">
+          <Clock className="size-3 text-cyan-400" />
+          {meta.processing_time_ms}ms
+        </span>
+        <span className="flex items-center gap-1">
+          <Cpu className="size-3 text-cyan-400" />
+          Gate: {(meta.confidence_threshold * 100).toFixed(0)}%
+        </span>
+      </div>
+    </div>
   )
 }
