@@ -8,7 +8,7 @@ import { fetchSampleRegions } from '@/api/client'
 import { injectHatchPattern } from '@/utils/patterns'
 
 /**
- * Root Application Container — connects Aerospace HeaderIsland, Tactical Control Deck,
+ * Root Application Container — connects TopBar, Sidebar,
  * Leaflet GeoJSON layer, and Detailed Chip Inspector.
  */
 export default function App() {
@@ -39,10 +39,6 @@ export default function App() {
           paris_metropolis: {
             name: 'Paris Metropolis (France)',
             bbox: [2.25, 48.80, 2.45, 48.92],
-          },
-          barcelona_coast: {
-            name: 'Barcelona Coast (Spain)',
-            bbox: [2.10, 41.35, 2.25, 41.45],
           },
         })
       })
@@ -100,8 +96,8 @@ export default function App() {
   }, [])
 
   return (
-    <div className="relative flex h-screen w-screen bg-[#06080f] overflow-hidden select-none font-sans text-slate-100">
-      {/* Floating Tactical Top Command Bar */}
+    <div className="relative flex h-screen w-screen bg-[#090d16] overflow-hidden select-none font-sans text-slate-200">
+      {/* Top Header Bar */}
       <HeaderIsland
         mode={mode}
         setMode={setMode}
@@ -111,7 +107,7 @@ export default function App() {
         activeBbox={bbox}
       />
 
-      {/* Floating Tactical Control Deck */}
+      {/* Analytical Controls Sidebar */}
       <Sidebar
         mode={mode}
         setMode={setMode}
@@ -125,12 +121,13 @@ export default function App() {
         onTriggerDraw={() => setIsDrawTriggered(true)}
       />
 
-      {/* Primary Satellite Observation Map */}
-      <main className="flex-1 relative h-full w-full">
+      {/* Map Surface */}
+      <main className="flex-1 relative h-full w-full pt-14">
         <MapView
           geojsonData={data}
           mode={mode}
           flyBounds={flyBounds}
+          bbox={bbox}
           onBboxDrawn={handleBboxDrawn}
           onSelectFeature={setSelectedFeature}
           isDrawTriggered={isDrawTriggered}
@@ -139,7 +136,7 @@ export default function App() {
         />
       </main>
 
-      {/* Interactive Chip Inspector Modal */}
+      {/* Chip Inspector Drawer */}
       {selectedFeature && (
         <ChipInspectorModal
           feature={selectedFeature}

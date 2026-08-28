@@ -1,24 +1,26 @@
 import React, { useEffect, useRef, useMemo, useCallback } from 'react'
-import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, GeoJSON, Rectangle, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { getFeatureColor } from '@/utils/colors'
 import { renderToString } from 'react-dom/server'
 import TilePopup from './TilePopup'
 import DrawControl from './DrawControl'
-import { Radar, Radio } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
+
+const CARTO_API_KEY = import.meta.env.VITE_CARTO_API_KEY || 'cb1_2ez0_1_d9de38ac60e752fa3828b29f'
+const TILE_URL = `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=${CARTO_API_KEY}`
 
 /**
- * Smoothly flies the map view to given geospatial bounds.
+ * Smoothly moves map viewport to given bounds.
  */
 function FlyTo({ bounds }) {
   const map = useMap()
   useEffect(() => {
     if (bounds) {
       map.flyToBounds(bounds, {
-        padding: [60, 60],
+        padding: [50, 50],
         maxZoom: 14,
-        duration: 1.2,
-        easeLinearity: 0.25,
+        duration: 0.8,
       })
     }
   }, [bounds, map])
@@ -26,13 +28,13 @@ function FlyTo({ bounds }) {
 }
 
 /**
- * MapView — High-performance geospatial Leaflet canvas.
- * Renders calibrated EuroSAT GeoJSON chips, CartoDB dark tiles, and active radar sweep overlay.
+ * MapView — Geospatial Leaflet canvas with CARTO Dark Matter basemap.
  */
 export default function MapView({
   geojsonData,
   mode,
   flyBounds,
+  bbox,
   onBboxDrawn,
   onSelectFeature,
   isDrawTriggered,
@@ -50,7 +52,7 @@ export default function MapView({
       const isReview = feature.properties.needs_review
       return {
         fillColor: color,
-        fillOpacity: isReview ? 0.40 : 0.76,
+        fillOpacity: isReview ? 0.45 : 0.75,
         color: isReview ? '#f59e0b' : '#ffffff',
         weight: isReview ? 1.5 : 0.75,
         dashArray: isReview ? '4 3' : undefined,
@@ -62,7 +64,6 @@ export default function MapView({
 
   const onEachFeature = useCallback(
     (feature, layer) => {
-      // Hover Tooltip Popup
       const popupContent = renderToString(<TilePopup feature={feature} mode={mode} />)
       layer.bindPopup(popupContent, {
         className: 'envirosat-popup',
@@ -70,10 +71,9 @@ export default function MapView({
         minWidth: 260,
       })
 
-      // Hover feedback
       layer.on('mouseover', () => {
         layer.setStyle({
-          weight: 2.5,
+          weight: 2,
           fillOpacity: 0.92,
           color: '#38bdf8',
         })
@@ -84,7 +84,6 @@ export default function MapView({
         layer.setStyle(styleFeature(feature))
       })
 
-      // Click to open detailed inspector
       layer.on('click', () => {
         if (onSelectFeature) {
           onSelectFeature(feature)
@@ -94,32 +93,26 @@ export default function MapView({
     [mode, styleFeature, onSelectFeature]
   )
 
+  const bboxBounds = useMemo(() => {
+    if (!bbox || bbox.length !== 4) return null
+    // [min_lon, min_lat, max_lon, max_lat] -> [[min_lat, min_lon], [max_lat, max_lon]]
+    return [
+      [bbox[1], bbox[0]],
+      [bbox[3], bbox[2]],
+    ]
+  }, [bbox])
+
   return (
-    <div className="relative flex-1 h-full w-full bg-[#04060a] overflow-hidden">
-      {/* Active Radar Sweep Overlay during AI Processing */}
+    <div className="relative flex-1 h-full w-full bg-[#06090f] overflow-hidden">
+      {/* Processing Banner */}
       {loading && (
-        <div className="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-slate-950/40 backdrop-blur-[2px]">
-          <div className="relative flex items-center justify-center">
-            {/* Concentric expanding radar rings */}
-            <div className="absolute size-96 rounded-full border border-cyan-500/20 animate-ping opacity-30" />
-            <div className="absolute size-64 rounded-full border border-cyan-400/40 animate-pulse" />
-            <div className="absolute size-40 rounded-full border border-cyan-300/60" />
-
-            {/* Rotating Radar Scan Beam */}
-            <div className="size-80 rounded-full border border-cyan-500/30 overflow-hidden relative animate-radar-sweep shadow-[0_0_60px_rgba(6,182,212,0.25)]">
-              <div className="absolute top-1/2 left-1/2 w-40 h-40 origin-top-left bg-gradient-to-br from-cyan-400/30 via-cyan-500/10 to-transparent -translate-x-full -translate-y-full" />
-            </div>
-
-            {/* Central Badge */}
-            <div className="absolute flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/90 border border-cyan-400/40 shadow-2xl backdrop-blur-xl font-mono text-xs text-cyan-300">
-              <Radio className="size-3.5 animate-pulse text-cyan-400" />
-              <span>Scanning Sentinel-2 Imagery...</span>
-            </div>
-          </div>
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/95 border border-blue-500/50 text-xs font-medium text-blue-200 shadow-xl backdrop-blur-md">
+          <Loader2 className="size-3.5 animate-spin text-blue-400" />
+          <span>Processing scene chips...</span>
         </div>
       )}
 
-      {/* Primary Leaflet Container */}
+      {/* Leaflet Map */}
       <MapContainer
         center={[48.15, 11.55]}
         zoom={10}
@@ -128,11 +121,9 @@ export default function MapView({
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url={`https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png${
-            import.meta.env.VITE_CARTO_API_KEY
-              ? `?api_key=${import.meta.env.VITE_CARTO_API_KEY}`
-              : '?api_key=cb1_2ez0_1_d9de38ac60e752fa3828b29f'
-          }`}
+          url={TILE_URL}
+          subdomains="abcd"
+          maxZoom={20}
         />
         <DrawControl
           onBboxDrawn={onBboxDrawn}
@@ -140,6 +131,22 @@ export default function MapView({
           onResetDrawTrigger={onResetDrawTrigger}
         />
         <FlyTo bounds={flyBounds} />
+
+        {/* Stable Active Bounding Box Highlight */}
+        {bboxBounds && (
+          <Rectangle
+            bounds={bboxBounds}
+            pathOptions={{
+              color: '#38bdf8',
+              weight: 2,
+              fillColor: '#0284c7',
+              fillOpacity: 0.08,
+              dashArray: '6 4',
+            }}
+          />
+        )}
+
+        {/* GeoJSON Feature Chips */}
         {geojsonData && geojsonData.features && geojsonData.features.length > 0 && (
           <GeoJSON
             key={geojsonKey}
