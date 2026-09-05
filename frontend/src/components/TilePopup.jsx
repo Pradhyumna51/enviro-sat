@@ -26,12 +26,12 @@ export default function TilePopup({ feature, mode }) {
 
         <div className="grid grid-cols-2 gap-1.5 p-2 rounded bg-slate-950 border border-slate-800 text-xs font-mono">
           <div>
-            <span className="text-[9px] text-slate-400 block">Baseline</span>
+            <span className="text-[10px] text-slate-300 block">Baseline</span>
             <span className="font-semibold text-slate-200 truncate block">{p.class_before}</span>
             <span className="text-[10px] text-slate-400">{(p.confidence_before * 100).toFixed(0)}%</span>
           </div>
           <div>
-            <span className="text-[9px] text-slate-400 block">Target</span>
+            <span className="text-[10px] text-slate-300 block">Target</span>
             <span className="font-semibold text-blue-300 truncate block">{p.class_after}</span>
             <span className="text-[10px] text-slate-400">{(p.confidence_after * 100).toFixed(0)}%</span>
           </div>
@@ -75,7 +75,7 @@ export default function TilePopup({ feature, mode }) {
 
       <div className="flex items-baseline justify-between p-2 rounded bg-slate-950 border border-slate-800">
         <div>
-          <span className="text-[9px] text-slate-400 uppercase block font-semibold">
+          <span className="text-[10px] text-slate-300 uppercase block font-semibold">
             Predicted
           </span>
           <span className="text-xs font-bold text-white">{p.predicted_class}</span>

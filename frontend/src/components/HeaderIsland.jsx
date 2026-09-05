@@ -52,14 +52,21 @@ export default function HeaderIsland({
         </div>
       </div>
 
-      {/* Center Mode Switcher Tabs */}
-      <div className="flex items-center p-1 rounded-lg bg-slate-950 border border-slate-800">
+      {/* Center Mode Switcher — sliding indicator (§4) */}
+      <div className="relative flex items-center p-1 rounded-lg bg-slate-950 border border-slate-800">
+        <div
+          className="absolute top-1 bottom-1 rounded-md bg-blue-600 shadow-sm transition-transform duration-200 ease-out pointer-events-none"
+          style={{
+            width: 'calc(50% - 4px)',
+            left: '4px',
+            transform: mode === 'change' ? 'translateX(100%)' : 'translateX(0)',
+          }}
+          aria-hidden="true"
+        />
         <button
           onClick={() => setMode('classify')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
-            mode === 'classify'
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+          className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium cursor-pointer transition-colors duration-100 ${
+            mode === 'classify' ? 'text-white' : 'text-slate-400 hover:text-slate-200'
           }`}
         >
           <Layers className="size-3.5" />
@@ -68,10 +75,8 @@ export default function HeaderIsland({
 
         <button
           onClick={() => setMode('change')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
-            mode === 'change'
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+          className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium cursor-pointer transition-colors duration-100 ${
+            mode === 'change' ? 'text-white' : 'text-slate-400 hover:text-slate-200'
           }`}
         >
           <GitCompareArrows className="size-3.5" />
@@ -120,11 +125,18 @@ export default function HeaderIsland({
         </button>
       </div>
 
-      {/* About Modal */}
-      {infoOpen && (
-        <div className="absolute top-16 right-4 w-96 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl p-4 z-50 animate-in fade-in duration-150">
+      {/* About Popover — always rendered, CSS show/hide for enter+exit (§3, §7) */}
+      <div
+        className={`absolute top-16 right-4 w-96 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl p-4 z-50 transition-[opacity,transform] duration-150 ease-out ${
+          infoOpen
+            ? 'opacity-100 scale-100 pointer-events-auto'
+            : 'opacity-0 scale-[0.92] pointer-events-none'
+        }`}
+        style={{ transformOrigin: 'top right' }}
+        aria-hidden={!infoOpen}
+      >
           <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-3">
-            <h3 className="text-xs font-semibold text-white">About Enviro-Sat</h3>
+            <h3 className="text-sm font-semibold text-white">About Enviro-Sat</h3>
             <button
               onClick={() => setInfoOpen(false)}
               className="text-slate-400 hover:text-white text-xs cursor-pointer"
@@ -158,7 +170,6 @@ export default function HeaderIsland({
             </a>
           </div>
         </div>
-      )}
     </header>
   )
 }

@@ -31,17 +31,17 @@ export default function StatsPanel({ data, mode }) {
         <div className="grid grid-cols-3 gap-2 font-mono text-center">
           <div className="p-2 rounded bg-slate-900 border border-slate-800">
             <span className="text-xs font-bold text-red-400 block">{meta.changed_tiles_count}</span>
-            <span className="text-[9px] text-slate-400 uppercase">Changed</span>
+            <span className="text-[10px] text-slate-300 uppercase">Changed</span>
           </div>
           <div className="p-2 rounded bg-slate-900 border border-slate-800">
             <span className="text-xs font-bold text-emerald-400 block">
               {meta.total_tiles - meta.changed_tiles_count}
             </span>
-            <span className="text-[9px] text-slate-400 uppercase">Stable</span>
+            <span className="text-[10px] text-slate-300 uppercase">Stable</span>
           </div>
           <div className="p-2 rounded bg-slate-900 border border-slate-800">
             <span className="text-xs font-bold text-slate-200 block">{meta.total_tiles}</span>
-            <span className="text-[9px] text-slate-400 uppercase">Total Chips</span>
+            <span className="text-[10px] text-slate-300 uppercase">Total Chips</span>
           </div>
         </div>
 
@@ -109,15 +109,15 @@ export default function StatsPanel({ data, mode }) {
       <div className="grid grid-cols-3 gap-2 font-mono text-center">
         <div className="p-2 rounded bg-slate-900 border border-slate-800">
           <span className="text-xs font-bold text-blue-400 block">{meta.total_tiles}</span>
-          <span className="text-[9px] text-slate-400 uppercase">Classified</span>
+          <span className="text-[10px] text-slate-300 uppercase">Classified</span>
         </div>
         <div className="p-2 rounded bg-slate-900 border border-slate-800">
           <span className="text-xs font-bold text-amber-400 block">{meta.tiles_needing_review}</span>
-          <span className="text-[9px] text-slate-400 uppercase">Review</span>
+          <span className="text-[10px] text-slate-300 uppercase">Review</span>
         </div>
         <div className="p-2 rounded bg-slate-900 border border-slate-800">
           <span className="text-xs font-bold text-slate-200 block">{meta.review_rate_percent}%</span>
-          <span className="text-[9px] text-slate-400 uppercase">Uncertain</span>
+          <span className="text-[10px] text-slate-300 uppercase">Uncertain</span>
         </div>
       </div>
 

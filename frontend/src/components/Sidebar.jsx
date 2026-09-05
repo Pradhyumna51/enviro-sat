@@ -97,17 +97,19 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`fixed top-14 bottom-0 left-0 z-20 flex bg-slate-900 border-r border-slate-800 transition-all duration-200 ${
+      className={`fixed top-14 bottom-0 left-0 z-20 flex bg-slate-900 border-r border-slate-800 transition-[width] duration-200 ${
         collapsed ? 'w-12' : 'w-80 sm:w-88'
       }`}
     >
       {/* Collapse / Expand Tab */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-4 z-30 flex size-6 items-center justify-center rounded-full bg-slate-800 border border-slate-700 text-slate-300 shadow-md hover:bg-slate-700 hover:text-white cursor-pointer"
+        className="absolute -right-[22px] top-2 z-30 flex size-11 items-center justify-center cursor-pointer group"
         title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
       >
-        {collapsed ? <ChevronRight className="size-3.5" /> : <ChevronLeft className="size-3.5" />}
+        <span className="flex size-6 items-center justify-center rounded-full bg-slate-800 border border-slate-700 text-slate-300 shadow-md group-hover:bg-slate-700 group-hover:text-white transition-colors">
+          {collapsed ? <ChevronRight className="size-3.5" /> : <ChevronLeft className="size-3.5" />}
+        </span>
       </button>
 
       {collapsed ? (
@@ -153,7 +155,7 @@ export default function Sidebar({
           <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-4">
             {/* 1. Spatial AOI */}
             <div className="flex flex-col gap-2 p-3 rounded-lg bg-slate-950/70 border border-slate-800">
-              <div className="flex items-center justify-between text-xs font-semibold text-slate-300">
+              <div className="flex items-center justify-between text-xs font-semibold text-slate-200 tracking-wide">
                 <span className="flex items-center gap-1.5">
                   <Crosshair className="size-3.5 text-blue-400" />
                   Target Bounding Box
@@ -173,11 +175,11 @@ export default function Sidebar({
                 {bboxFormatted}
               </div>
 
-              <div className="flex items-center gap-2 pt-1">
+              <div className="flex items-center gap-2 pt-1 w-full min-w-0">
                 <select
                   value={selectedRegion}
                   onChange={handleRegionSelect}
-                  className="flex-1 h-8 rounded bg-slate-900 border border-slate-800 text-xs text-slate-300 px-2 focus:outline-none focus:border-blue-500 cursor-pointer"
+                  className="min-w-0 flex-1 h-8 rounded bg-slate-900 border border-slate-800 text-xs text-slate-300 px-2 focus:outline-none focus:border-blue-500 cursor-pointer truncate"
                 >
                   <option value="">Preset region...</option>
                   {Object.entries(regions).map(([key, reg]) => (
@@ -190,10 +192,10 @@ export default function Sidebar({
                 {onTriggerDraw && (
                   <button
                     onClick={onTriggerDraw}
-                    className="h-8 px-2.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-slate-200 font-medium flex items-center gap-1 cursor-pointer"
+                    className="shrink-0 h-8 px-2.5 rounded bg-slate-800 hover:bg-slate-700 active:scale-[0.97] border border-slate-700 text-xs text-slate-200 font-medium flex items-center gap-1.5 cursor-pointer transition-transform duration-100"
                     title="Click and drag on the map to define a custom AOI"
                   >
-                    <Crosshair className="size-3 text-blue-400" />
+                    <Crosshair className="size-3 text-blue-400 shrink-0" />
                     <span>Draw</span>
                   </button>
                 )}
@@ -202,7 +204,7 @@ export default function Sidebar({
 
             {/* 2. Acquisition Date(s) */}
             <div className="flex flex-col gap-2 p-3 rounded-lg bg-slate-950/70 border border-slate-800">
-              <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+              <label className="text-xs font-semibold text-slate-200 tracking-wide flex items-center gap-1.5">
                 <Calendar className="size-3.5 text-blue-400" />
                 {mode === 'classify' ? 'Acquisition Date' : 'Temporal Comparison Dates'}
               </label>
@@ -241,7 +243,7 @@ export default function Sidebar({
             {/* 3. Confidence Threshold */}
             <div className="flex flex-col gap-2 p-3 rounded-lg bg-slate-950/70 border border-slate-800">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-slate-300 flex items-center gap-1.5">
+                <span className="font-semibold text-slate-200 tracking-wide flex items-center gap-1.5">
                   <SlidersHorizontal className="size-3.5 text-amber-400" />
                   Confidence Threshold
                 </span>
@@ -270,7 +272,7 @@ export default function Sidebar({
             <button
               onClick={handleAnalyze}
               disabled={loading || !bbox}
-              className="flex items-center justify-center gap-2 w-full h-10 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs shadow-md disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+              className="flex items-center justify-center gap-2 w-full h-10 rounded-lg bg-blue-600 hover:bg-blue-500 active:scale-[0.97] text-white font-medium text-xs shadow-md disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-[color,background-color,transform] duration-150"
             >
               {loading ? (
                 <>
