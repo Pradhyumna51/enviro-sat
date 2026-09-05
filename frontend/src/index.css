@@ -142,6 +142,7 @@
   box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6) !important;
   color: #f1f5f9 !important;
   padding: 0 !important;
+  max-width: calc(100vw - 32px) !important;
 }
 
 .envirosat-popup .leaflet-popup-content {

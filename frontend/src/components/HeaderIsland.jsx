@@ -7,11 +7,12 @@ import {
   Info,
   ExternalLink,
   ChevronDown,
+  SlidersHorizontal,
 } from 'lucide-react'
 import { fetchHealth } from '@/api/client'
 
 /**
- * TopBar — Clean, grounded Earth Observation header.
+ * TopBar — Clean, grounded Earth Observation header with mobile responsiveness.
  */
 export default function HeaderIsland({
   mode,
@@ -20,6 +21,8 @@ export default function HeaderIsland({
   selectedRegion,
   onSelectRegion,
   activeBbox,
+  mobileSidebarOpen,
+  onToggleMobileSidebar,
 }) {
   const [serverOnline, setServerOnline] = useState(true)
   const [infoOpen, setInfoOpen] = useState(false)
@@ -31,31 +34,31 @@ export default function HeaderIsland({
   }, [])
 
   return (
-    <header className="absolute top-0 left-0 right-0 z-30 h-14 bg-slate-900/90 border-b border-slate-800/90 backdrop-blur-md px-4 flex items-center justify-between">
+    <header className="absolute top-0 left-0 right-0 z-30 h-14 bg-slate-900/90 border-b border-slate-800/90 backdrop-blur-md px-3 sm:px-4 flex items-center justify-between gap-2">
       {/* Brand & Mission Identity */}
-      <div className="flex items-center gap-3">
-        <div className="flex size-8 items-center justify-center rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-400">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div className="flex size-8 items-center justify-center rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-400 shrink-0">
           <Satellite className="size-4.5" />
         </div>
         <div className="flex flex-col">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <h1 className="text-sm font-semibold text-white tracking-tight">
               Enviro-Sat
             </h1>
-            <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] font-mono text-slate-300">
+            <span className="hidden sm:inline-block rounded bg-slate-800 px-1.5 py-0.5 text-[10px] font-mono text-slate-300">
               Sentinel-2 L2A
             </span>
           </div>
-          <span className="text-[11px] text-slate-400">
+          <span className="text-[11px] text-slate-400 hidden md:block">
             Land-Use & Temporal Change Monitor
           </span>
         </div>
       </div>
 
       {/* Center Mode Switcher — sliding indicator (§4) */}
-      <div className="relative flex items-center p-1 rounded-lg bg-slate-950 border border-slate-800">
+      <div className="relative flex items-center p-0.5 sm:p-1 rounded-lg bg-slate-950 border border-slate-800 shrink-0">
         <div
-          className="absolute top-1 bottom-1 rounded-md bg-blue-600 shadow-sm transition-transform duration-200 ease-out pointer-events-none"
+          className="absolute top-0.5 sm:top-1 bottom-0.5 sm:bottom-1 rounded-md bg-blue-600 shadow-sm transition-transform duration-200 ease-out pointer-events-none"
           style={{
             width: 'calc(50% - 4px)',
             left: '4px',
@@ -65,27 +68,27 @@ export default function HeaderIsland({
         />
         <button
           onClick={() => setMode('classify')}
-          className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium cursor-pointer transition-colors duration-100 ${
+          className={`relative z-10 flex-1 flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-md text-[11px] sm:text-xs font-medium cursor-pointer transition-colors duration-100 ${
             mode === 'classify' ? 'text-white' : 'text-slate-400 hover:text-slate-200'
           }`}
         >
           <Layers className="size-3.5" />
-          <span>Land Cover</span>
+          <span>Land<span className="hidden sm:inline">&nbsp;Cover</span></span>
         </button>
 
         <button
           onClick={() => setMode('change')}
-          className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium cursor-pointer transition-colors duration-100 ${
+          className={`relative z-10 flex-1 flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-md text-[11px] sm:text-xs font-medium cursor-pointer transition-colors duration-100 ${
             mode === 'change' ? 'text-white' : 'text-slate-400 hover:text-slate-200'
           }`}
         >
           <GitCompareArrows className="size-3.5" />
-          <span>Change Detection</span>
+          <span>Change<span className="hidden sm:inline">&nbsp;Detection</span></span>
         </button>
       </div>
 
       {/* Right Controls: Preset Regions & Info */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
         {/* Preset Selector */}
         <div className="hidden sm:flex items-center gap-1.5">
           <MapPin className="size-3.5 text-slate-400" />
@@ -104,7 +107,7 @@ export default function HeaderIsland({
         </div>
 
         {/* Server Status Dot */}
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-400">
+        <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-400">
           <span
             className={`size-2 rounded-full ${
               serverOnline ? 'bg-emerald-400' : 'bg-red-400'
@@ -123,11 +126,30 @@ export default function HeaderIsland({
         >
           <Info className="size-4" />
         </button>
+
+        {/* Mobile Workbench Toggle Button */}
+        {onToggleMobileSidebar && (
+          <button
+            onClick={onToggleMobileSidebar}
+            className={`sm:hidden size-8 rounded-md border flex items-center justify-center cursor-pointer transition-colors relative ${
+              mobileSidebarOpen
+                ? 'bg-blue-600 border-blue-500 text-white'
+                : 'bg-slate-950 border-slate-800 text-slate-300 hover:text-white'
+            }`}
+            title="Toggle Controls & AOI"
+            aria-label="Toggle Controls & AOI"
+          >
+            <SlidersHorizontal className="size-3.5" />
+            {activeBbox && !mobileSidebarOpen && (
+              <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-blue-500 ring-2 ring-slate-900" />
+            )}
+          </button>
+        )}
       </div>
 
       {/* About Popover — always rendered, CSS show/hide for enter+exit (§3, §7) */}
       <div
-        className={`absolute top-16 right-4 w-96 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl p-4 z-50 transition-[opacity,transform] duration-150 ease-out ${
+        className={`absolute top-16 right-2 sm:right-4 w-[calc(100vw-1rem)] max-w-sm sm:w-96 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl p-4 z-50 transition-[opacity,transform] duration-150 ease-out ${
           infoOpen
             ? 'opacity-100 scale-100 pointer-events-auto'
             : 'opacity-0 scale-[0.92] pointer-events-none'

@@ -12,6 +12,7 @@ import {
   Loader2,
   Crosshair,
   Trash2,
+  X,
 } from 'lucide-react'
 import { fetchSampleRegions } from '@/api/client'
 import Legend from './Legend'
@@ -32,6 +33,8 @@ export default function Sidebar({
   data,
   onFlyTo,
   onTriggerDraw,
+  mobileOpen = false,
+  onCloseMobile,
 }) {
   const [regions, setRegions] = useState({})
   const [selectedRegion, setSelectedRegion] = useState('')
@@ -84,6 +87,9 @@ export default function Sidebar({
         confidence_threshold: confidence,
       })
     }
+    if (onCloseMobile) {
+      onCloseMobile()
+    }
   }
 
   const handleClearBbox = () => {
@@ -96,111 +102,141 @@ export default function Sidebar({
     : 'No active bounding box'
 
   return (
-    <aside
-      className={`fixed top-14 bottom-0 left-0 z-20 flex bg-slate-900 border-r border-slate-800 transition-[width] duration-200 ${
-        collapsed ? 'w-12' : 'w-80 sm:w-88'
-      }`}
-    >
-      {/* Collapse / Expand Tab */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-[22px] top-2 z-30 flex size-11 items-center justify-center cursor-pointer group"
-        title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+    <>
+      {/* Mobile Backdrop Scrim */}
+      {mobileOpen && (
+        <div
+          onClick={onCloseMobile}
+          className="sm:hidden fixed inset-0 z-30 bg-black/60 backdrop-blur-sm transition-opacity"
+          aria-hidden="true"
+        />
+      )}
+
+      <aside
+        className={`fixed top-14 bottom-0 left-0 flex bg-slate-900 border-r border-slate-800 transition-all duration-200 z-40 sm:z-20 ${
+          mobileOpen
+            ? 'translate-x-0 w-[85vw] max-w-[340px]'
+            : '-translate-x-full sm:translate-x-0'
+        } ${collapsed ? 'sm:w-12' : 'sm:w-88'}`}
       >
-        <span className="flex size-6 items-center justify-center rounded-full bg-slate-800 border border-slate-700 text-slate-300 shadow-md group-hover:bg-slate-700 group-hover:text-white transition-colors">
-          {collapsed ? <ChevronRight className="size-3.5" /> : <ChevronLeft className="size-3.5" />}
-        </span>
-      </button>
+        {/* Collapse / Expand Tab (Desktop only) */}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="hidden sm:flex absolute -right-[22px] top-2 z-30 size-11 items-center justify-center cursor-pointer group"
+          title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+        >
+          <span className="flex size-6 items-center justify-center rounded-full bg-slate-800 border border-slate-700 text-slate-300 shadow-md group-hover:bg-slate-700 group-hover:text-white transition-colors">
+            {collapsed ? <ChevronRight className="size-3.5" /> : <ChevronLeft className="size-3.5" />}
+          </span>
+        </button>
 
-      {collapsed ? (
-        /* Collapsed Icon Bar */
-        <div className="flex flex-col items-center py-4 gap-3 w-full">
-          <button
-            onClick={() => {
-              setCollapsed(false)
-              setMode('classify')
-            }}
-            className={`p-2 rounded-md ${
-              mode === 'classify' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800'
-            }`}
-            title="Land Cover"
-          >
-            <Layers className="size-4" />
-          </button>
-          <button
-            onClick={() => {
-              setCollapsed(false)
-              setMode('change')
-            }}
-            className={`p-2 rounded-md ${
-              mode === 'change' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800'
-            }`}
-            title="Change Detection"
-          >
-            <GitCompareArrows className="size-4" />
-          </button>
-          <div className="h-[1px] w-6 bg-slate-800 my-1" />
-          <button
-            onClick={handleAnalyze}
-            disabled={loading || !bbox}
-            className="p-2 rounded-md bg-blue-600 text-white disabled:opacity-40"
-            title="Run Analysis"
-          >
-            <Search className="size-4" />
-          </button>
-        </div>
-      ) : (
-        /* Full Controls Sidebar */
-        <div className="flex flex-col h-full w-full overflow-hidden p-4">
-          <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-4">
-            {/* 1. Spatial AOI */}
-            <div className="flex flex-col gap-2 p-3 rounded-lg bg-slate-950/70 border border-slate-800">
-              <div className="flex items-center justify-between text-xs font-semibold text-slate-200 tracking-wide">
-                <span className="flex items-center gap-1.5">
-                  <Crosshair className="size-3.5 text-blue-400" />
-                  Target Bounding Box
-                </span>
-                {bbox && (
-                  <button
-                    onClick={handleClearBbox}
-                    className="text-[11px] text-red-400 hover:text-red-300 flex items-center gap-1 cursor-pointer"
-                  >
-                    <Trash2 className="size-3" />
-                    <span>Clear</span>
-                  </button>
-                )}
-              </div>
-
-              <div className="p-2 rounded bg-slate-900 border border-slate-800 font-mono text-[11px] text-slate-300 truncate">
-                {bboxFormatted}
-              </div>
-
-              <div className="flex items-center gap-2 pt-1 w-full min-w-0">
-                <select
-                  value={selectedRegion}
-                  onChange={handleRegionSelect}
-                  className="min-w-0 flex-1 h-8 rounded bg-slate-900 border border-slate-800 text-xs text-slate-300 px-2 focus:outline-none focus:border-blue-500 cursor-pointer truncate"
-                >
-                  <option value="">Preset region...</option>
-                  {Object.entries(regions).map(([key, reg]) => (
-                    <option key={key} value={key}>
-                      {reg.name}
-                    </option>
-                  ))}
-                </select>
-
-                {onTriggerDraw && (
-                  <button
-                    onClick={onTriggerDraw}
-                    className="shrink-0 h-8 px-2.5 rounded bg-slate-800 hover:bg-slate-700 active:scale-[0.97] border border-slate-700 text-xs text-slate-200 font-medium flex items-center gap-1.5 cursor-pointer transition-transform duration-100"
-                    title="Click and drag on the map to define a custom AOI"
-                  >
-                    <Crosshair className="size-3 text-blue-400 shrink-0" />
-                    <span>Draw</span>
-                  </button>
-                )}
-              </div>
+        {collapsed && !mobileOpen ? (
+          /* Collapsed Icon Bar (Desktop only) */
+          <div className="flex flex-col items-center py-4 gap-3 w-full">
+            <button
+              onClick={() => {
+                setCollapsed(false)
+                setMode('classify')
+              }}
+              className={`p-2 rounded-md ${
+                mode === 'classify' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800'
+              }`}
+              title="Land Cover"
+            >
+              <Layers className="size-4" />
+            </button>
+            <button
+              onClick={() => {
+                setCollapsed(false)
+                setMode('change')
+              }}
+              className={`p-2 rounded-md ${
+                mode === 'change' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800'
+              }`}
+              title="Change Detection"
+            >
+              <GitCompareArrows className="size-4" />
+            </button>
+            <div className="h-[1px] w-6 bg-slate-800 my-1" />
+            <button
+              onClick={handleAnalyze}
+              disabled={loading || !bbox}
+              className="p-2 rounded-md bg-blue-600 text-white disabled:opacity-40"
+              title="Run Analysis"
+            >
+              <Search className="size-4" />
+            </button>
+          </div>
+        ) : (
+          /* Full Controls Sidebar */
+          <div className="flex flex-col h-full w-full overflow-hidden p-3 sm:p-4">
+            {/* Mobile Header with Dismiss button */}
+            <div className="flex sm:hidden items-center justify-between pb-2 mb-2 border-b border-slate-800">
+              <span className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+                <SlidersHorizontal className="size-3.5 text-blue-400" />
+                Analytical Workbench
+              </span>
+              <button
+                onClick={onCloseMobile}
+                className="size-7 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer"
+                title="Close Drawer"
+              >
+                <X className="size-4" />
+              </button>
             </div>
+
+            <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-4">
+              {/* 1. Spatial AOI */}
+              <div className="flex flex-col gap-2 p-3 rounded-lg bg-slate-950/70 border border-slate-800">
+                <div className="flex items-center justify-between text-xs font-semibold text-slate-200 tracking-wide">
+                  <span className="flex items-center gap-1.5">
+                    <Crosshair className="size-3.5 text-blue-400" />
+                    Target Bounding Box
+                  </span>
+                  {bbox && (
+                    <button
+                      onClick={handleClearBbox}
+                      className="text-[11px] text-red-400 hover:text-red-300 flex items-center gap-1 cursor-pointer"
+                    >
+                      <Trash2 className="size-3" />
+                      <span>Clear</span>
+                    </button>
+                  )}
+                </div>
+
+                <div className="p-2 rounded bg-slate-900 border border-slate-800 font-mono text-[11px] text-slate-300 truncate">
+                  {bboxFormatted}
+                </div>
+
+                <div className="flex items-center gap-2 pt-1 w-full min-w-0">
+                  <select
+                    value={selectedRegion}
+                    onChange={handleRegionSelect}
+                    className="min-w-0 flex-1 h-8 rounded bg-slate-900 border border-slate-800 text-xs text-slate-300 px-2 focus:outline-none focus:border-blue-500 cursor-pointer truncate"
+                  >
+                    <option value="">Preset region...</option>
+                    {Object.entries(regions).map(([key, reg]) => (
+                      <option key={key} value={key}>
+                        {reg.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  {onTriggerDraw && (
+                    <button
+                      onClick={() => {
+                        onTriggerDraw()
+                        if (onCloseMobile) onCloseMobile()
+                      }}
+                      className="shrink-0 h-8 px-2.5 rounded bg-slate-800 hover:bg-slate-700 active:scale-[0.97] border border-slate-700 text-xs text-slate-200 font-medium flex items-center gap-1.5 cursor-pointer transition-transform duration-100"
+                      title="Click and drag on the map to define a custom AOI"
+                    >
+                      <Crosshair className="size-3 text-blue-400 shrink-0" />
+                      <span>Draw</span>
+                    </button>
+                  )}
+                </div>
+              </div>
 
             {/* 2. Acquisition Date(s) */}
             <div className="flex flex-col gap-2 p-3 rounded-lg bg-slate-950/70 border border-slate-800">
@@ -312,5 +348,6 @@ export default function Sidebar({
         </div>
       )}
     </aside>
+  </>
   )
 }

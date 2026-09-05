@@ -62,9 +62,22 @@ export default function ChipInspectorModal({ feature, mode, onClose, onZoomToChi
     : []
 
   return (
-    <aside className="fixed top-14 bottom-0 right-0 z-30 w-80 sm:w-92 bg-slate-900 border-l border-slate-800 shadow-2xl flex flex-col font-sans">
-      {/* Header */}
-      <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+    <>
+      {/* Mobile Backdrop Scrim */}
+      <div
+        onClick={onClose}
+        className="sm:hidden fixed inset-0 z-30 bg-black/60 backdrop-blur-sm transition-opacity"
+        aria-hidden="true"
+      />
+
+      <aside className="fixed inset-x-0 bottom-0 max-h-[85vh] z-40 rounded-t-2xl border-t border-slate-700 bg-slate-900 shadow-2xl flex flex-col font-sans sm:inset-x-auto sm:top-14 sm:bottom-0 sm:right-0 sm:w-92 sm:max-h-none sm:rounded-none sm:border-t-0 sm:border-l sm:border-slate-800 transition-transform duration-200 ease-out">
+        {/* Mobile Drag Handle Pill */}
+        <div className="sm:hidden flex items-center justify-center pt-2.5 pb-1">
+          <div className="w-10 h-1 rounded-full bg-slate-700" />
+        </div>
+
+        {/* Header */}
+        <div className="px-4 py-3 sm:py-4 border-b border-slate-800 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div
             className="size-7 rounded flex items-center justify-center text-white text-xs font-bold"
@@ -268,5 +281,6 @@ export default function ChipInspectorModal({ feature, mode, onClose, onZoomToChi
         )}
       </div>
     </aside>
+  </>
   )
 }

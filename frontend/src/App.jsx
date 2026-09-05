@@ -95,6 +95,8 @@ export default function App() {
     }
   }, [])
 
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+
   return (
     <div className="relative flex h-screen w-screen bg-[#090d16] overflow-hidden select-none font-sans text-slate-200">
       {/* Top Header Bar */}
@@ -105,6 +107,8 @@ export default function App() {
         selectedRegion={selectedRegion}
         onSelectRegion={handleSelectRegion}
         activeBbox={bbox}
+        mobileSidebarOpen={mobileSidebarOpen}
+        onToggleMobileSidebar={() => setMobileSidebarOpen((prev) => !prev)}
       />
 
       {/* Analytical Controls Sidebar */}
@@ -118,7 +122,12 @@ export default function App() {
         error={error}
         data={data}
         onFlyTo={handleFlyTo}
-        onTriggerDraw={() => setIsDrawTriggered(true)}
+        onTriggerDraw={() => {
+          setIsDrawTriggered(true)
+          setMobileSidebarOpen(false)
+        }}
+        mobileOpen={mobileSidebarOpen}
+        onCloseMobile={() => setMobileSidebarOpen(false)}
       />
 
       {/* Map Surface */}

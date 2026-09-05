@@ -67,8 +67,8 @@ export default function MapView({
       const popupContent = renderToString(<TilePopup feature={feature} mode={mode} />)
       layer.bindPopup(popupContent, {
         className: 'envirosat-popup',
-        maxWidth: 320,
-        minWidth: 260,
+        maxWidth: 300,
+        minWidth: 220,
       })
 
       layer.on('mouseover', () => {
